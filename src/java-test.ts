@@ -1,4 +1,4 @@
-import ast from '../examples/java/Test.java.ast.json';
+import ast from '../examples/java/MyTestClass.java.ast.json';
 import { AssertionRoulletTestSmellDetector } from './test-smell-detectors/assertion-roullet-test-smell-detector';
 import { DuplicateAssertTestSmellDetector } from './test-smell-detectors/duplicate-assert-test-smell-detector';
 import JavaJUnitASTTestExtractor from './test-extractors/java-junit-ast-test-extractor';

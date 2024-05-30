@@ -1,4 +1,4 @@
-import ast from '../examples/javascript/test.ast.json';
+import ast from '../examples/javascript/my-test-class.ast.json';
 import { AssertionRoulletTestSmellDetector } from './test-smell-detectors/assertion-roullet-test-smell-detector';
 import { DuplicateAssertTestSmellDetector } from './test-smell-detectors/duplicate-assert-test-smell-detector';
 import { JavascriptJestASTTestExtractor } from './test-extractors/javascript-jest-ast-test-extractor';

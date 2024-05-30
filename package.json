@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -b",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "example:java": "ts-node src/java-test.ts",
+    "example:javascript": "ts-node src/javascript-test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
