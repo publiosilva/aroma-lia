@@ -1,15 +1,17 @@
-import { ASTNode, ASTProgram, ASTTestExtractor, Test, TestAssert } from "./ast-test-extractor";
-import { MethodOrFunctionInvocation, findAllMethodInvocations, getLiteralValue } from "./util";
+import { ASTModel, ASTNodeModel, TestAssertModel, TestModel } from '../../../domain/models';
+import { ExtractTestsFromAST } from '../../../domain/usecases';
+import { findAllMethodInvocations, getLiteralValue, MethodOrFunctionInvocation } from '../../../test-extractors/util';
 
-class JavaJUnitASTTestExtractor implements ASTTestExtractor {
-  private tests: Test[] = [];
+export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
+  private tests: TestModel[] = [];
 
-  extract(ast: ASTProgram): Test[] {
+  execute(ast: ASTModel): TestModel[] {
     this.extractTests(ast);
+
     return this.tests;
   }
 
-  private extractTests(node: ASTNode): void {
+  private extractTests(node: ASTNodeModel): void {
     if (this.isTestMethod(node)) {
       const testName = this.extractTestName(node);
       const asserts = this.extractAsserts(node);
@@ -23,7 +25,7 @@ class JavaJUnitASTTestExtractor implements ASTTestExtractor {
     }
   }
 
-  private isTestMethod(node: ASTNode): boolean {
+  private isTestMethod(node: ASTNodeModel): boolean {
     return node.type === 'method_declaration' && node.children.some((c1) => {
       return c1.type === 'modifiers' && c1.children.some((c2) => {
         return c2.type === 'marker_annotation' && c2.children.some((c3) => {
@@ -33,41 +35,41 @@ class JavaJUnitASTTestExtractor implements ASTTestExtractor {
     });
   }
 
-  private extractTestName(node: ASTNode): string {
+  private extractTestName(node: ASTNodeModel): string {
     const stringLiteralArg = node.children.find(child => child.type === 'identifier');
     return stringLiteralArg ? stringLiteralArg.value : '';
   }
 
-  private extractAsserts(node: ASTNode): TestAssert[] {
+  private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
     const methodInvocations = findAllMethodInvocations(node);
     const assertMethods = [
-      "assertArrayEquals",
-      "assertEquals",
-      "assertFalse",
-      "assertNotNull",
-      "assertNotSame",
-      "assertNull",
-      "assertSame",
-      "assertThat",
-      "assertTrue",
+      'assertArrayEquals',
+      'assertEquals',
+      'assertFalse',
+      'assertNotNull',
+      'assertNotSame',
+      'assertNull',
+      'assertSame',
+      'assertThat',
+      'assertTrue',
     ];
     const assertMethodInvocations = methodInvocations.filter(({ identifier }) => assertMethods.includes(identifier));
 
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation))
   }
 
-  private extractAssertData(methodInvocation: MethodOrFunctionInvocation): TestAssert {
-    const testAssert: TestAssert = {
+  private extractAssertData(methodInvocation: MethodOrFunctionInvocation): TestAssertModel {
+    const testAssert: TestAssertModel = {
       matcher: methodInvocation.identifier
     }
 
     if (
       [
-        "assertArrayEquals",
-        "assertEquals",
-        "assertNotSame",
-        "assertSame",
-        "assertThat",
+        'assertArrayEquals',
+        'assertEquals',
+        'assertNotSame',
+        'assertSame',
+        'assertThat',
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 2) {
@@ -80,10 +82,10 @@ class JavaJUnitASTTestExtractor implements ASTTestExtractor {
       }
     } else if (
       [
-        "assertFalse",
-        "assertNotNull",
-        "assertNull",
-        "assertTrue",
+        'assertFalse',
+        'assertNotNull',
+        'assertNull',
+        'assertTrue',
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 1) {
@@ -97,5 +99,3 @@ class JavaJUnitASTTestExtractor implements ASTTestExtractor {
     return testAssert;
   }
 }
-
-export default JavaJUnitASTTestExtractor;

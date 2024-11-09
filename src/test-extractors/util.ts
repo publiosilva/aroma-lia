@@ -1,18 +1,18 @@
-import { ASTNode } from "./ast-test-extractor";
+import { ASTNodeModel } from '../domain/models';
 
 export type MethodOrFunctionInvocation = {
   chained?: MethodOrFunctionInvocation,
   identifier: string,
-  node: ASTNode,
-  parameterListNode?: ASTNode,
-  parameterNodes?: ASTNode[],
+  node: ASTNodeModel,
+  parameterListNode?: ASTNodeModel,
+  parameterNodes?: ASTNodeModel[],
 }
 
 export type VariableDeclararion = {
   identifier: string,
-  node: ASTNode,
-  valueNode?: ASTNode,
-  typeChild?: ASTNode,
+  node: ASTNodeModel,
+  valueNode?: ASTNodeModel,
+  typeChild?: ASTNodeModel,
 }
 
 /**
@@ -23,12 +23,12 @@ export type VariableDeclararion = {
  * member_expression => [member_expression, ., property_identifier]
  */
 
-export function findAllMethodInvocations(node: ASTNode): MethodOrFunctionInvocation[] {
+export function findAllMethodInvocations(node: ASTNodeModel): MethodOrFunctionInvocation[] {
   const methodInvocations: {
     identifier: string,
-    node: ASTNode,
-    parameterListNode?: ASTNode,
-    parameterNodes?: ASTNode[],
+    node: ASTNodeModel,
+    parameterListNode?: ASTNodeModel,
+    parameterNodes?: ASTNodeModel[],
   }[] = []
 
   if (node.type === 'expression_statement') {
@@ -43,14 +43,14 @@ export function findAllMethodInvocations(node: ASTNode): MethodOrFunctionInvocat
     }
   }
 
-  const childrenMethodInvocations: MethodOrFunctionInvocation[] = node.children.reduce((prev: MethodOrFunctionInvocation[], curr: ASTNode) => {
+  const childrenMethodInvocations: MethodOrFunctionInvocation[] = node.children.reduce((prev: MethodOrFunctionInvocation[], curr: ASTNodeModel) => {
     return [...prev, ...findAllMethodInvocations(curr)]
   }, []);
 
   return [...methodInvocations, ...childrenMethodInvocations];
 }
 
-export function findAllFunctionInvocations(node: ASTNode): MethodOrFunctionInvocation[] {
+export function findAllFunctionInvocations(node: ASTNodeModel): MethodOrFunctionInvocation[] {
   const functionInvocations: MethodOrFunctionInvocation[] = []
 
   if (node.type === 'expression_statement') {
@@ -61,7 +61,7 @@ export function findAllFunctionInvocations(node: ASTNode): MethodOrFunctionInvoc
     }
   }
 
-  const childrenFunctionInvocations: MethodOrFunctionInvocation[] = node.children.reduce((prev: MethodOrFunctionInvocation[], curr: ASTNode) => {
+  const childrenFunctionInvocations: MethodOrFunctionInvocation[] = node.children.reduce((prev: MethodOrFunctionInvocation[], curr: ASTNodeModel) => {
     return [...prev, ...findAllFunctionInvocations(curr)]
   }, []);
 
@@ -69,9 +69,9 @@ export function findAllFunctionInvocations(node: ASTNode): MethodOrFunctionInvoc
 }
 
 function extractCallExpressionData(
-  node: ASTNode,
+  node: ASTNodeModel,
   identifierQueue: string[] = [],
-  parameterListNodesQueue: (ASTNode | undefined)[] = []
+  parameterListNodesQueue: (ASTNodeModel | undefined)[] = []
 ): MethodOrFunctionInvocation {
   const memberExpressionNode = node?.children.find((c) => c.type === 'member_expression');
 
@@ -99,7 +99,7 @@ function extractCallExpressionData(
   }
 }
 
-export function findAllLocalVariableDeclarations(node: ASTNode): VariableDeclararion[] {
+export function findAllLocalVariableDeclarations(node: ASTNodeModel): VariableDeclararion[] {
   const localVariableDeclarations: VariableDeclararion[] = []
 
   if (['variable_declarator', 'local_variable_declaration'].includes(node.type)) {
@@ -110,19 +110,19 @@ export function findAllLocalVariableDeclarations(node: ASTNode): VariableDeclara
     localVariableDeclarations.push({ identifier, node, valueNode, typeChild });
   }
 
-  const childrenLocalVariableDeclarations: VariableDeclararion[] = node.children.reduce((prev: VariableDeclararion[], curr: ASTNode) => {
+  const childrenLocalVariableDeclarations: VariableDeclararion[] = node.children.reduce((prev: VariableDeclararion[], curr: ASTNodeModel) => {
     return [...prev, ...findAllLocalVariableDeclarations(curr)]
   }, []);
 
   return [...localVariableDeclarations, ...childrenLocalVariableDeclarations];
 }
 
-export function isInsideOf(nodeA: ASTNode, nodeB: ASTNode): boolean {
+export function isInsideOf(nodeA: ASTNodeModel, nodeB: ASTNodeModel): boolean {
   return nodeA.span[0] >= nodeB.span[0] &&
     nodeA.span[2] <= nodeB.span[2];
 }
 
-export function getLiteralValue(node: ASTNode): string {
+export function getLiteralValue(node: ASTNodeModel): string {
   return node.value + node.children.reduce((prev, curr) => {
     return prev + getLiteralValue(curr);
   }, '');

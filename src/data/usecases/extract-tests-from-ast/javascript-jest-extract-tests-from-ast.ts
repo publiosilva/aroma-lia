@@ -1,15 +1,17 @@
-import { ASTNode, ASTProgram, ASTTestExtractor, Test, TestAssert } from "./ast-test-extractor";
-import { MethodOrFunctionInvocation, findAllFunctionInvocations, getLiteralValue, isInsideOf } from "./util";
+import { ASTModel, ASTNodeModel, TestAssertModel, TestModel } from '../../../domain/models';
+import { ExtractTestsFromAST } from '../../../domain/usecases';
+import { findAllFunctionInvocations, getLiteralValue, isInsideOf, MethodOrFunctionInvocation } from '../../../test-extractors/util';
 
-export class JavascriptJestASTTestExtractor implements ASTTestExtractor {
-  private tests: Test[] = [];
+export class JavascriptJestExtractTestsFromAST implements ExtractTestsFromAST {
+  private tests: TestModel[] = [];
 
-  extract(ast: ASTProgram): Test[] {
+  execute(ast: ASTModel): TestModel[] {
     this.extractTests(ast);
+
     return this.tests;
   }
 
-  private extractTests(node: ASTNode): void {
+  private extractTests(node: ASTNodeModel): void {
     const functionInvocations = findAllFunctionInvocations(node);
     const testFunctionInvocations = functionInvocations.filter((item) => ['it', 'test'].includes(item.identifier));
     const assertFunctionInvocations = functionInvocations.filter((item) => item.identifier === 'expect');
@@ -23,8 +25,8 @@ export class JavascriptJestASTTestExtractor implements ASTTestExtractor {
     });
   }
 
-  private extractAssertData(assertInvocation: MethodOrFunctionInvocation): TestAssert {
-    const testAssert: TestAssert = {};
+  private extractAssertData(assertInvocation: MethodOrFunctionInvocation): TestAssertModel {
+    const testAssert: TestAssertModel = {};
 
     testAssert.literalActual = assertInvocation.parameterNodes?.length ? getLiteralValue(assertInvocation.parameterNodes[0]) : undefined;
     testAssert.matcher = assertInvocation.chained?.identifier
