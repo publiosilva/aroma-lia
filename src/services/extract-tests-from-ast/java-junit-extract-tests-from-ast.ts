@@ -1,9 +1,13 @@
-import { ASTModel, ASTNodeModel, TestAssertModel, TestModel } from '../../../domain/models';
-import { ExtractTestsFromAST } from '../../../domain/usecases';
-import { findAllMethodInvocations, getLiteralValue, MethodOrFunctionInvocation } from '../../../test-extractors/util';
+import { ASTModel, ASTNodeModel, InvocationModel, TestAssertModel, TestModel } from '../../domain/models';
+import { ExtractTestsFromAST, FindAllMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
-export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
+export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST {
   private tests: TestModel[] = [];
+
+  constructor(
+    private findAllMethodInvocations: FindAllMethodInvocations,
+    private getLiteralValue: GetLiteralValue
+  ) {}
 
   execute(ast: ASTModel): TestModel[] {
     this.extractTests(ast);
@@ -41,7 +45,7 @@ export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
   }
 
   private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
-    const methodInvocations = findAllMethodInvocations(node);
+    const methodInvocations = this.findAllMethodInvocations.execute(node);
     const assertMethods = [
       'assertArrayEquals',
       'assertEquals',
@@ -58,7 +62,7 @@ export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation))
   }
 
-  private extractAssertData(methodInvocation: MethodOrFunctionInvocation): TestAssertModel {
+  private extractAssertData(methodInvocation: InvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {
       matcher: methodInvocation.identifier
     }
@@ -73,12 +77,12 @@ export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 2) {
-        testAssert.literalActual = getLiteralValue(methodInvocation.parameterNodes[1])
-        testAssert.literalExpected = getLiteralValue(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
+        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
       } else if (methodInvocation.parameterNodes?.length === 3) {
-        testAssert.literalActual = getLiteralValue(methodInvocation.parameterNodes[2])
-        testAssert.literalExpected = getLiteralValue(methodInvocation.parameterNodes[1])
-        testAssert.message = getLiteralValue(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[2])
+        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
       }
     } else if (
       [
@@ -89,10 +93,10 @@ export class JavaJUnitExtractTestsFromAST implements ExtractTestsFromAST {
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 1) {
-        testAssert.literalActual = getLiteralValue(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
       } else if (methodInvocation.parameterNodes?.length === 2) {
-        testAssert.literalActual = getLiteralValue(methodInvocation.parameterNodes[1])
-        testAssert.message = getLiteralValue(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
       }
     }
 
