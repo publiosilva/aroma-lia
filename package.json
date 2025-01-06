@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc -b",
-    "lint": "eslint .",
+    "lint": "eslint . --fix",
     "example:java": "ts-node src/java-test.ts",
     "example:javascript": "ts-node src/javascript-test.ts"
   },

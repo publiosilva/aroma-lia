@@ -1,27 +1,23 @@
 import ast from '../examples/javascript/my-test-class.ast.json';
-import { AssertionRoulletTestSmellDetector } from './test-smell-detectors/assertion-roullet-test-smell-detector';
-import { DuplicateAssertTestSmellDetector } from './test-smell-detectors/duplicate-assert-test-smell-detector';
-import { JavascriptJestASTTestExtractor } from './test-extractors/javascript-jest-ast-test-extractor';
+import { makeAssertionRouletteDetectTestSmellService, makeDuplicateAssertDetectTestSmellService, makeJavascriptJestExtractTestsFromAST } from './main/factories/services';
 
 (() => {
-  const javascriptExtractor = new JavascriptJestASTTestExtractor();
+  const assertionRoulletDetectTestSmell = makeAssertionRouletteDetectTestSmellService();
+  const duplicateAssertDetectTestSmell = makeDuplicateAssertDetectTestSmellService();
+  const javascriptExtractor = makeJavascriptJestExtractTestsFromAST();
 
-  const javascriptTests = javascriptExtractor.extract(ast);
+  const javascriptTests = javascriptExtractor.execute(ast);
 
   console.log(JSON.stringify({ javascriptTests }, null, 2));
 
-  const duplicateAssertTestSmellDetector = new DuplicateAssertTestSmellDetector();
-
   const testsWithDuplicatedAssertTestSmell = javascriptTests.filter(
-    (test) => duplicateAssertTestSmellDetector.isPresent(test)
+    (test) => duplicateAssertDetectTestSmell.execute(test)
   );
 
   console.log(JSON.stringify({ testsWithDuplicatedAssertTestSmell }, null, 2));
 
-  const assertionRoulletTestSmellDetector = new AssertionRoulletTestSmellDetector();
-
   const testsWithAssertionRoulletTestSmell = javascriptTests.filter(
-    (test) => assertionRoulletTestSmellDetector.isPresent(test)
+    (test) => assertionRoulletDetectTestSmell.execute(test)
   );
 
   console.log(JSON.stringify({ testsWithAssertionRoulletTestSmell }, null, 2));
