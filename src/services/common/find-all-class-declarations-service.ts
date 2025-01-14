@@ -1,5 +1,5 @@
-import { AnnotationModel, ASTNodeModel, ClassDeclarationModel } from "../../domain/models";
-import { FindAllClassDeclarations } from "../../domain/usecases/find-all-class-declarations";
+import { AnnotationModel, ASTNodeModel, ClassDeclarationModel } from '../../domain/models';
+import { FindAllClassDeclarations } from '../../domain/usecases';
 
 export class FindAllClassDeclarationService implements FindAllClassDeclarations {
   execute(node: ASTNodeModel): ClassDeclarationModel[] {

@@ -1,4 +1,4 @@
-import { ASTNodeModel, ClassDeclarationModel } from '../models';
+import { ASTNodeModel, ClassDeclarationModel } from '../../models';
 
 export interface FindAllClassDeclarations {
   execute(node: ASTNodeModel): ClassDeclarationModel[];
