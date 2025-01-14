@@ -1,47 +1,48 @@
-import { ASTModel, ASTNodeModel, InvocationModel, TestAssertModel, TestModel } from '../../domain/models';
-import { ExtractTestsFromAST, FindAllMethodInvocations, GetLiteralValue } from '../../domain/usecases';
+import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestModel, TestSwitchModel } from '../../domain/models';
+import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllMethodDeclarations, FindAllMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
 export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST {
   private tests: TestModel[] = [];
 
   constructor(
+    private findAllClassDeclarations: FindAllClassDeclarations,
+    private findAllMethodDeclarations: FindAllMethodDeclarations,
     private findAllMethodInvocations: FindAllMethodInvocations,
     private getLiteralValue: GetLiteralValue
-  ) {}
+  ) { }
 
-  execute(ast: ASTModel): TestModel[] {
-    this.extractTests(ast);
+  execute(ast: ASTModel): TestSwitchModel[] {
+    const testSwitches: TestSwitchModel[] = [];
+    const classDeclarations = this.findAllClassDeclarations.execute(ast);
 
-    return this.tests;
-  }
+    classDeclarations.forEach((classDeclaration) => {
+      const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
-  private extractTests(node: ASTNodeModel): void {
-    if (this.isTestMethod(node)) {
-      const testName = this.extractTestName(node);
-      const asserts = this.extractAsserts(node);
-      this.tests.push({ name: testName, asserts });
-    }
+      if (methodDeclarations.some(({ annotations }) => annotations?.some(({ identifier }) => identifier === 'Test'))) {
+        const testSwitch: TestSwitchModel = {
+          isIgnored: classDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+          name: classDeclaration.identifier,
+          tests: [],
+        };
 
-    if (node.children) {
-      for (const child of node.children) {
-        this.extractTests(child);
+        methodDeclarations.forEach((methodDeclaration) => {
+          if (methodDeclaration?.annotations?.some(({ identifier }) => identifier === 'Test')) {
+            testSwitch.tests.push({
+              asserts: this.extractAsserts(methodDeclaration.node),
+              endLine: methodDeclaration.node.span[2],
+              isExclusive: false,
+              isIgnored: methodDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+              name: methodDeclaration.identifier,
+              startLine: methodDeclaration.node.span[0],
+            });
+          }
+        });
+
+        testSwitches.push(testSwitch);
       }
-    }
-  }
-
-  private isTestMethod(node: ASTNodeModel): boolean {
-    return node.type === 'method_declaration' && node.children.some((c1) => {
-      return c1.type === 'modifiers' && c1.children.some((c2) => {
-        return c2.type === 'marker_annotation' && c2.children.some((c3) => {
-          return c3.type === 'identifier' && c3.value === 'Test'
-        })
-      })
     });
-  }
 
-  private extractTestName(node: ASTNodeModel): string {
-    const stringLiteralArg = node.children.find(child => child.type === 'identifier');
-    return stringLiteralArg ? stringLiteralArg.value : '';
+    return testSwitches;
   }
 
   private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
@@ -62,7 +63,7 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation))
   }
 
-  private extractAssertData(methodInvocation: InvocationModel): TestAssertModel {
+  private extractAssertData(methodInvocation: FunctionOrMethodInvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {
       matcher: methodInvocation.identifier
     }

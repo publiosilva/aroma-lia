@@ -1,5 +1,5 @@
-import { ASTNodeModel, InvocationModel } from '../models';
+import { ASTNodeModel, FunctionOrMethodInvocationModel } from '../models';
 
 export interface FindAllMethodInvocations {
-  execute(node: ASTNodeModel): InvocationModel[];
+  execute(node: ASTNodeModel): FunctionOrMethodInvocationModel[];
 }

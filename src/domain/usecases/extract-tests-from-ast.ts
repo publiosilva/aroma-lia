@@ -1,5 +1,5 @@
-import { ASTModel, TestModel } from '../models';
+import { ASTModel, TestSwitchModel } from '../models';
 
 export interface ExtractTestsFromAST {
-  execute(ast: ASTModel): TestModel[];
+  execute(ast: ASTModel): TestSwitchModel[];
 }

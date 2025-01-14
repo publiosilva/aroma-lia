@@ -1,5 +1,5 @@
-import { ASTNodeModel, VariableDeclararionModel } from '../domain/models';
-import { FindAllVariableDeclarations } from '../domain/usecases';
+import { ASTNodeModel, VariableDeclararionModel } from '../../domain/models';
+import { FindAllVariableDeclarations } from '../../domain/usecases';
 
 export class FindAllVariableDeclarationsService implements FindAllVariableDeclarations {
   execute(node: ASTNodeModel): VariableDeclararionModel[] {

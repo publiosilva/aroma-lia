@@ -1,9 +1,9 @@
-import { ASTNodeModel, InvocationModel } from '../domain/models';
-import { FindAllFunctionInvocations } from '../domain/usecases';
+import { ASTNodeModel, FunctionOrMethodInvocationModel } from '../../domain/models';
+import { FindAllFunctionInvocations } from '../../domain/usecases';
 
 export class FindAllFunctionInvocationsService implements FindAllFunctionInvocations {
-  execute(node: ASTNodeModel): InvocationModel[] {
-    const functionInvocations: InvocationModel[] = []
+  execute(node: ASTNodeModel): FunctionOrMethodInvocationModel[] {
+    const functionInvocations: FunctionOrMethodInvocationModel[] = []
 
     if (node.type === 'expression_statement') {
       const callExpressionNode = node.children.find(({ type }) => ['call_expression'].includes(type));
@@ -13,7 +13,7 @@ export class FindAllFunctionInvocationsService implements FindAllFunctionInvocat
       }
     }
 
-    const childrenFunctionInvocations: InvocationModel[] = node.children.reduce((prev: InvocationModel[], curr: ASTNodeModel) => {
+    const childrenFunctionInvocations: FunctionOrMethodInvocationModel[] = node.children.reduce((prev: FunctionOrMethodInvocationModel[], curr: ASTNodeModel) => {
       return [...prev, ...this.execute(curr)]
     }, []);
 
@@ -24,7 +24,7 @@ export class FindAllFunctionInvocationsService implements FindAllFunctionInvocat
     node: ASTNodeModel,
     identifierQueue: string[] = [],
     parameterListNodesQueue: (ASTNodeModel | undefined)[] = []
-  ): InvocationModel {
+  ): FunctionOrMethodInvocationModel {
     const memberExpressionNode = node?.children.find((c) => c.type === 'member_expression');
 
     if (memberExpressionNode) {

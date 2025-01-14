@@ -1,5 +1,5 @@
-import { TestModel } from '../models';
+import { TestSmell, TestSwitchModel } from '../models';
 
 export interface DetectTestSmell {
-  execute(test: TestModel): boolean
+  execute(testSwitch: TestSwitchModel): TestSmell[];
 }
