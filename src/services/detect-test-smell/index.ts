@@ -1,2 +1,3 @@
-export * from './assertion-roulette-detect-test-smell';
-export * from './duplicate-assert-detect-test-smell';
+export * from './detect-assertion-roulette-test-smell';
+export * from './detect-duplicate-assert-test-smell';
+export * from './detect-ignored-test-test-smell';

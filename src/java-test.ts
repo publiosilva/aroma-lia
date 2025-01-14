@@ -1,10 +1,10 @@
 import ast from '../examples/java/MyTestClass.java.ast.json';
-import { makeAssertionRouletteDetectTestSmellService, makeDuplicateAssertDetectTestSmellService, makeJavaJUnitExtractTestsFromASTService } from './main/factories/services';
+import { makeDetectAssertionRouletteTestSmellService, makeDetectDuplicateAssertTestSmellService, makeJavaJUnitExtractTestsFromASTService } from './main/factories/services';
 
 
 (() => {
-  const assertionRoulletDetectTestSmell = makeAssertionRouletteDetectTestSmellService();
-  const duplicateAssertDetectTestSmell = makeDuplicateAssertDetectTestSmellService();
+  const assertionRoulletDetectTestSmell = makeDetectAssertionRouletteTestSmellService();
+  const duplicateAssertDetectTestSmell = makeDetectDuplicateAssertTestSmellService();
   const javaExtractor = makeJavaJUnitExtractTestsFromASTService();
 
   const javaTests = javaExtractor.execute(ast);

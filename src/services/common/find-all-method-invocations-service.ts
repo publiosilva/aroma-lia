@@ -1,8 +1,8 @@
-import { ASTNodeModel, InvocationModel } from '../domain/models';
-import { FindAllMethodInvocations } from '../domain/usecases';
+import { ASTNodeModel, FunctionOrMethodInvocationModel } from '../../domain/models';
+import { FindAllMethodInvocations } from '../../domain/usecases';
 
 export class FindAllMethodInvocationsService implements FindAllMethodInvocations {
-  execute(node: ASTNodeModel): InvocationModel[] {
+  execute(node: ASTNodeModel): FunctionOrMethodInvocationModel[] {
     const methodInvocations: {
       identifier: string,
       node: ASTNodeModel,
@@ -22,7 +22,7 @@ export class FindAllMethodInvocationsService implements FindAllMethodInvocations
       }
     }
 
-    const childrenMethodInvocations: InvocationModel[] = node.children.reduce((prev: InvocationModel[], curr: ASTNodeModel) => {
+    const childrenMethodInvocations: FunctionOrMethodInvocationModel[] = node.children.reduce((prev: FunctionOrMethodInvocationModel[], curr: ASTNodeModel) => {
       return [...prev, ...this.execute(curr)]
     }, []);
 

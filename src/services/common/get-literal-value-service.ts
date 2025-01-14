@@ -1,5 +1,5 @@
-import { ASTNodeModel } from '../domain/models';
-import { GetLiteralValue } from '../domain/usecases';
+import { ASTNodeModel } from '../../domain/models';
+import { GetLiteralValue } from '../../domain/usecases';
 
 export class GetLiteralValueService implements GetLiteralValue {
   execute(node: ASTNodeModel): string {

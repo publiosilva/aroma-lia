@@ -1,4 +1,4 @@
-import { TestModel, ASTModel, ASTNodeModel, TestAssertModel, InvocationModel } from '../../domain/models';
+import { TestModel, ASTModel, ASTNodeModel, TestAssertModel, FunctionOrMethodInvocationModel } from '../../domain/models';
 import { ExtractTestsFromAST, FindAllFunctionInvocations, GetLiteralValue, IsAInsideOfB } from '../../domain/usecases';
 
 export class JavascriptJestExtractTestsFromASTService implements ExtractTestsFromAST {
@@ -18,7 +18,7 @@ export class JavascriptJestExtractTestsFromASTService implements ExtractTestsFro
 
   private extractTests(node: ASTNodeModel): void {
     const functionInvocations = this.findAllFunctionInvocations.execute(node);
-    const testFunctionInvocations = functionInvocations.filter((item) => ['it', 'test'].includes(item.identifier));
+    const testFunctionInvocations = functionInvocations.filter((item) => ['it', 'test', 'xit', 'xtest'].includes(item.identifier));
     const assertFunctionInvocations = functionInvocations.filter((item) => item.identifier === 'expect');
 
     testFunctionInvocations.forEach((testInvocation) => {
@@ -30,7 +30,7 @@ export class JavascriptJestExtractTestsFromASTService implements ExtractTestsFro
     });
   }
 
-  private extractAssertData(assertInvocation: InvocationModel): TestAssertModel {
+  private extractAssertData(assertInvocation: FunctionOrMethodInvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {};
 
     testAssert.literalActual = assertInvocation.parameterNodes?.length ? this.getLiteralValue.execute(assertInvocation.parameterNodes[0]) : undefined;
@@ -40,7 +40,7 @@ export class JavascriptJestExtractTestsFromASTService implements ExtractTestsFro
     return testAssert;
   }
 
-  private extractTestName(testInvocation: InvocationModel): string {
+  private extractTestName(testInvocation: FunctionOrMethodInvocationModel): string {
     return testInvocation.parameterNodes?.length ? testInvocation.parameterNodes[0]?.value : '';
   }
 }

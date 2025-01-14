@@ -1,7 +1,7 @@
 import { ASTNodeModel } from './ast';
 
-export interface InvocationModel {
-  chained?: InvocationModel,
+export interface FunctionOrMethodInvocationModel {
+  chained?: FunctionOrMethodInvocationModel,
   identifier: string,
   node: ASTNodeModel,
   parameterListNode?: ASTNodeModel,

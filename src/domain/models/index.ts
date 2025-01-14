@@ -1,4 +1,4 @@
 export * from './ast';
-export * from './invocation'
-export * from './test';
-export * from './variable-declaration';
+export * from './test-smell';
+export * from './test-switch';
+

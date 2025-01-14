@@ -1,9 +1,9 @@
-import { AssertionRouletteDetectTestSmellService, DuplicateAssertDetectTestSmellService } from '../../../services';
+import { DetectAssertionRouletteTestSmellService, DetectDuplicateAssertTestSmellService } from '../../../services';
 
-export function makeAssertionRouletteDetectTestSmellService() {
-  return new AssertionRouletteDetectTestSmellService();
+export function makeDetectAssertionRouletteTestSmellService() {
+  return new DetectAssertionRouletteTestSmellService();
 }
 
-export function makeDuplicateAssertDetectTestSmellService() {
-  return new DuplicateAssertDetectTestSmellService();
+export function makeDetectDuplicateAssertTestSmellService() {
+  return new DetectDuplicateAssertTestSmellService();
 }
