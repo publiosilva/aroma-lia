@@ -1,15 +1,17 @@
-import { FindAllFunctionInvocationsService, FindAllMethodInvocationsService, GetLiteralValueService, IsAInsideOfBService, JavaJUnitExtractTestsFromASTService, JavascriptJestExtractTestsFromASTService } from '../../../services';
+import { FindAllClassDeclarationsService, FindAllFunctionOrMethodDeclarationsService, FindAllFunctionOrMethodInvocationsService, FindAllFunctionOrMethodInvocationsService, GetLiteralValueService, IsAInsideOfBService, JavaJUnitExtractTestsFromASTService, JavascriptJestExtractTestsFromASTService } from '../../../services';
 
 export function makeJavaJUnitExtractTestsFromASTService() {
   return new JavaJUnitExtractTestsFromASTService(
-    new FindAllMethodInvocationsService(),
-    new GetLiteralValueService()
+    new FindAllClassDeclarationsService(),
+    new FindAllFunctionOrMethodDeclarationsService(),
+    new FindAllFunctionOrMethodInvocationsService(),
+    new GetLiteralValueService(),
   );
 }
 
 export function makeJavascriptJestExtractTestsFromAST() {
   return new JavascriptJestExtractTestsFromASTService(
-    new FindAllFunctionInvocationsService(),
+    new FindAllFunctionOrMethodInvocationsService(),
     new GetLiteralValueService(),
     new IsAInsideOfBService()
   );

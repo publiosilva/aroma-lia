@@ -1,13 +1,12 @@
-import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestModel, TestSwitchModel } from '../../domain/models';
-import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllMethodDeclarations, FindAllMethodInvocations, GetLiteralValue } from '../../domain/usecases';
+import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestSwitchModel } from '../../domain/models';
+import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
 export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST {
-  private tests: TestModel[] = [];
 
   constructor(
     private findAllClassDeclarations: FindAllClassDeclarations,
-    private findAllMethodDeclarations: FindAllMethodDeclarations,
-    private findAllMethodInvocations: FindAllMethodInvocations,
+    private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
+    private findAllMethodInvocations: FindAllFunctionOrMethodInvocations,
     private getLiteralValue: GetLiteralValue
   ) { }
 
@@ -18,20 +17,20 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
     classDeclarations.forEach((classDeclaration) => {
       const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
-      if (methodDeclarations.some(({ annotations }) => annotations?.some(({ identifier }) => identifier === 'Test'))) {
+      if (methodDeclarations.some(({ decorators }) => decorators?.some(({ identifier }) => identifier === 'Test'))) {
         const testSwitch: TestSwitchModel = {
-          isIgnored: classDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+          isIgnored: classDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
           name: classDeclaration.identifier,
           tests: [],
         };
 
         methodDeclarations.forEach((methodDeclaration) => {
-          if (methodDeclaration?.annotations?.some(({ identifier }) => identifier === 'Test')) {
+          if (methodDeclaration?.decorators?.some(({ identifier }) => identifier === 'Test')) {
             testSwitch.tests.push({
               asserts: this.extractAsserts(methodDeclaration.node),
               endLine: methodDeclaration.node.span[2],
               isExclusive: false,
-              isIgnored: methodDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
               name: methodDeclaration.identifier,
               startLine: methodDeclaration.node.span[0],
             });

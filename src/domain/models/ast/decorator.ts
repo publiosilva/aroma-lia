@@ -1,6 +1,6 @@
 import { ASTNodeModel } from './ast';
 
-export interface AnnotationModel {
+export interface DecoratorModel {
   identifier: string,
   node: ASTNodeModel,
 }
