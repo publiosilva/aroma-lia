@@ -10,35 +10,34 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
   execute(node: ASTNodeModel): FunctionOrMethodInvocationModel[] {
     const invocations: FunctionOrMethodInvocationModel[] = [];
 
-    if (node.type === 'expression_statement') {
-      const callNode = node.children.find(({ type }) => type === 'call');
+    const callNode = node.children.find(({ type }) => type === 'call');
 
-      if (callNode) {
-        invocations.push(this.extractCallData(callNode));
-      }
+    if (callNode) {
+      invocations.push(this.extractCallData(callNode));
+    }
 
-      const callExpressionNode = node.children.find(({ type }) => type === 'call_expression');
+    const callExpressionNode = node.children.find(({ type }) => type === 'call_expression');
 
-      if (callExpressionNode) {
-        invocations.push(this.extractCallExpressionData(callExpressionNode));
-      }
+    if (callExpressionNode) {
+      invocations.push(this.extractCallExpressionData(callExpressionNode));
+    }
 
-      const methodInvocationChild = node.children.find(({ type }) => type === 'method_invocation');
+    const methodInvocationChild = node.children.find(({ type }) => type === 'method_invocation');
 
-      if (methodInvocationChild) {
-        const methodInvocation = this.extractMethodInvocationData(methodInvocationChild);
+    if (methodInvocationChild) {
+      const methodInvocation = this.extractMethodInvocationData(methodInvocationChild);
 
-        if (methodInvocation) {
-          invocations.push(methodInvocation);
-        }
-      }
-
-      const invocationExpression = node.children.find(({ type }) => type === 'invocation_expression');
-
-      if (invocationExpression) {
-        invocations.push(this.extractInvocationExpressionData(invocationExpression));
+      if (methodInvocation) {
+        invocations.push(methodInvocation);
       }
     }
+
+    const invocationExpression = node.children.find(({ type }) => type === 'invocation_expression');
+
+    if (invocationExpression) {
+      invocations.push(this.extractInvocationExpressionData(invocationExpression));
+    }
+
 
     const childrenInvocations: FunctionOrMethodInvocationModel[] = node.children.reduce((prev: FunctionOrMethodInvocationModel[], curr: ASTNodeModel) => {
       return [...prev, ...this.execute(curr)];
@@ -49,7 +48,9 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
 
   private extractInvocationExpressionData(node: ASTNodeModel): FunctionOrMethodInvocationModel {
     const memberExpressionNode = node.children.find((c) => c.type === 'member_access_expression');
-    const identifier = memberExpressionNode ? this.getLiteralValue.execute(memberExpressionNode) : '';
+    const identifier = memberExpressionNode
+      ? this.getLiteralValue.execute(memberExpressionNode)
+      : node?.children.filter(({ type }) => type === 'identifier').at(-1)?.value || '';
     const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
     const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
 
@@ -63,7 +64,9 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
 
   private extractCallData(node: ASTNodeModel): FunctionOrMethodInvocationModel {
     const attributeNode = node.children.find(({ type }) => type === 'attribute');
-    const identifier = attributeNode?.children.filter(({ type }) => type === 'identifier').at(-1)?.value || '';
+    const identifier = attributeNode?.children.filter(({ type }) => type === 'identifier').at(-1)?.value
+      || node?.children.filter(({ type }) => type === 'identifier').at(-1)?.value
+      || '';
     const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
     const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
 

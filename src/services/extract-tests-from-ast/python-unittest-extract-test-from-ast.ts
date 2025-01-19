@@ -1,7 +1,31 @@
-import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestSwitchModel } from '../../domain/models';
+import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
 import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
 export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFromAST {
+  private readonly assertMethods = [
+    'assertEqual',
+    'assertTrue',
+    'assertFalse',
+    'assertIs',
+    'assertIsNot',
+    'assertIsNone',
+    'assertIsNotNone',
+    'assertIn',
+    'assertNotIn',
+    'assertGreater',
+    'assertGreaterEqual',
+    'assertLess',
+    'assertLessEqual',
+  ];
+
+  private readonly printMethods = [
+    'print'
+  ];
+
+  private readonly sleepMethods = [
+    'time.sleep'
+  ];
+
   constructor(
     private findAllClassDeclarations: FindAllClassDeclarations,
     private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
@@ -29,6 +53,7 @@ export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFro
               testSwitch.tests.push({
                 asserts: this.extractAsserts(methodDeclaration.node),
                 endLine: methodDeclaration.node.span[2],
+                events: this.extractEvents(methodDeclaration.node),
                 isExclusive: false,
                 isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'skip') || false,
                 name: methodDeclaration.identifier,
@@ -45,25 +70,36 @@ export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFro
     return testSwitches;
   }
 
+  private extractEvents(node: ASTNodeModel): TestEventModel[] {
+    const events: TestEventModel[] = [];
+    const methodInvocations = this.findAllMethodInvocations.execute(node);
+
+    methodInvocations.forEach(({ identifier, node }) => {
+      let type = TestEventTypeModel.unknown;
+
+      if (this.assertMethods.includes(identifier)) {
+        type = TestEventTypeModel.assert;
+      } else if (this.printMethods.includes(identifier)) {
+        type = TestEventTypeModel.print;
+      } else if (this.sleepMethods.includes(identifier)) {
+        type = TestEventTypeModel.sleep;
+      }
+
+      events.push({
+        endLine: node.span[2],
+        name: identifier,
+        startLine: node.span[0],
+        type,
+      })
+    });
+
+    return events;
+  }
+
   private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
     const methodInvocations = this.findAllMethodInvocations.execute(node);
-    const assertMethods = [
-      'assertEqual',
-      'assertTrue',
-      'assertFalse',
-      'assertIs',
-      'assertIsNot',
-      'assertIsNone',
-      'assertIsNotNone',
-      'assertIn',
-      'assertNotIn',
-      'assertGreater',
-      'assertGreaterEqual',
-      'assertLess',
-      'assertLessEqual',
-    ];
     const assertMethodInvocations = methodInvocations.filter(({ identifier }) =>
-      assertMethods.includes(identifier)
+      this.assertMethods.includes(identifier)
     );
 
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation));

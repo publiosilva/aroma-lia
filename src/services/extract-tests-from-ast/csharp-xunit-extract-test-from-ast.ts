@@ -3,6 +3,8 @@ import {
   ASTNodeModel,
   FunctionOrMethodInvocationModel,
   TestAssertModel,
+  TestEventModel,
+  TestEventTypeModel,
   TestSwitchModel
 } from '../../domain/models';
 import {
@@ -14,6 +16,26 @@ import {
 } from '../../domain/usecases';
 
 export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAST {
+  private readonly assertMethods = [
+    'Assert.True',
+    'Assert.False',
+    'Assert.Equal',
+    'Assert.NotEqual',
+    'Assert.Contains',
+    'Assert.DoesNotContain',
+    'Assert.Throws',
+    'Assert.Null',
+    'Assert.NotNull',
+  ];
+
+  private readonly printMethods = [
+    'Console.WriteLine'
+  ];
+
+  private readonly sleepMethods = [
+    'Thread.Sleep'
+  ];
+
   constructor(
     private findAllClassDeclarations: FindAllClassDeclarations,
     private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
@@ -24,8 +46,6 @@ export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAS
   execute(ast: ASTModel): TestSwitchModel[] {
     const testSwitches: TestSwitchModel[] = [];
     const classDeclarations = this.findAllClassDeclarations.execute(ast);
-
-    console.log(classDeclarations);
 
     classDeclarations.forEach((classDeclaration) => {
       const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
@@ -44,6 +64,7 @@ export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAS
             testSwitch.tests.push({
               asserts: this.extractAsserts(methodDeclaration.node),
               endLine: methodDeclaration.node.span[2],
+              events: this.extractEvents(methodDeclaration.node),
               isExclusive: false,
               isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'Skip') || false,
               name: methodDeclaration.identifier,
@@ -59,22 +80,36 @@ export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAS
     return testSwitches;
   }
 
-  private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
+  private extractEvents(node: ASTNodeModel): TestEventModel[] {
+    const events: TestEventModel[] = [];
     const methodInvocations = this.findAllMethodInvocations.execute(node);
 
-    const assertMethods = [
-      'Assert.True',
-      'Assert.False',
-      'Assert.Equal',
-      'Assert.NotEqual',
-      'Assert.Contains',
-      'Assert.DoesNotContain',
-      'Assert.Throws',
-      'Assert.Null',
-      'Assert.NotNull',
-    ];
+    methodInvocations.forEach(({ identifier, node }) => {
+      let type = TestEventTypeModel.unknown;
+
+      if (this.assertMethods.includes(identifier)) {
+        type = TestEventTypeModel.assert;
+      } else if (this.printMethods.includes(identifier)) {
+        type = TestEventTypeModel.print;
+      } else if (this.sleepMethods.includes(identifier)) {
+        type = TestEventTypeModel.sleep;
+      }
+
+      events.push({
+        endLine: node.span[2],
+        name: identifier,
+        startLine: node.span[0],
+        type,
+      })
+    });
+
+    return events;
+  }
+
+  private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
+    const methodInvocations = this.findAllMethodInvocations.execute(node);
     const assertMethodInvocations = methodInvocations.filter(({ identifier }) =>
-      assertMethods.includes(identifier)
+      this.assertMethods.includes(identifier)
     );
 
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation));
