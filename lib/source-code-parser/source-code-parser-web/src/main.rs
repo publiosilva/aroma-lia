@@ -7,7 +7,7 @@ use routes::*;
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Opt {
-    #[clap(long, short, default_value = "127.0.0.1")]
+    #[clap(long, short, default_value = "0.0.0.0")]
     host: String,
     #[clap(long, short, default_value = "8080")]
     port: i32,

@@ -1,5 +1,5 @@
 import { ASTNodeModel, FunctionOrMethodDeclarationModel } from '../../models';
 
-export interface FindAllMethodDeclarations {
+export interface FindAllFunctionOrMethodDeclarations {
   execute(node: ASTNodeModel): FunctionOrMethodDeclarationModel[];
 }

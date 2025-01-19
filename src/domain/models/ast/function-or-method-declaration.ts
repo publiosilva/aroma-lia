@@ -1,8 +1,8 @@
-import { AnnotationModel } from './annotation';
+import { DecoratorModel } from './decorator';
 import { ASTNodeModel } from './ast';
 
 export interface FunctionOrMethodDeclarationModel {
-  annotations?: AnnotationModel[],
+  decorators?: DecoratorModel[],
   identifier: string,
   node: ASTNodeModel,
 }

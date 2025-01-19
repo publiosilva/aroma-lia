@@ -25,11 +25,17 @@ COPY ./src ./src
 RUN npm install && npm run build
 
 # Stage 3: Final image
-FROM debian:bullseye-slim as final
+FROM ubuntu:22.04 as final
 
 # Install required runtime dependencies
 RUN apt-get update && apt-get install -y \
-    supervisor && rm -rf /var/lib/apt/lists/*
+    supervisor \
+    curl \
+    ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
 
 # Copy built artifacts from Rust build stage
 COPY --from=rust-build /usr/src/lib/source-code-parser/target/release/source-code-parser-web /app/source-code-parser-web

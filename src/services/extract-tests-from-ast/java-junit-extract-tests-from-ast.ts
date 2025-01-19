@@ -1,13 +1,32 @@
-import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestModel, TestSwitchModel } from '../../domain/models';
-import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllMethodDeclarations, FindAllMethodInvocations, GetLiteralValue } from '../../domain/usecases';
+import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
+import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
 export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST {
-  private tests: TestModel[] = [];
+  private readonly assertMethods = [
+    'assertArrayEquals',
+    'assertEquals',
+    'assertFalse',
+    'assertNotNull',
+    'assertNotSame',
+    'assertNull',
+    'assertSame',
+    'assertThat',
+    'assertTrue',
+  ];
+
+  private readonly printMethods = [
+    'System.out.println',
+    'println'
+  ];
+
+  private readonly sleepMethods = [
+    'Thread.sleep'
+  ];
 
   constructor(
     private findAllClassDeclarations: FindAllClassDeclarations,
-    private findAllMethodDeclarations: FindAllMethodDeclarations,
-    private findAllMethodInvocations: FindAllMethodInvocations,
+    private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
+    private findAllMethodInvocations: FindAllFunctionOrMethodInvocations,
     private getLiteralValue: GetLiteralValue
   ) { }
 
@@ -18,20 +37,21 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
     classDeclarations.forEach((classDeclaration) => {
       const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
-      if (methodDeclarations.some(({ annotations }) => annotations?.some(({ identifier }) => identifier === 'Test'))) {
+      if (methodDeclarations.some(({ decorators }) => decorators?.some(({ identifier }) => identifier === 'Test'))) {
         const testSwitch: TestSwitchModel = {
-          isIgnored: classDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+          isIgnored: classDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
           name: classDeclaration.identifier,
           tests: [],
         };
 
         methodDeclarations.forEach((methodDeclaration) => {
-          if (methodDeclaration?.annotations?.some(({ identifier }) => identifier === 'Test')) {
+          if (methodDeclaration?.decorators?.some(({ identifier }) => identifier === 'Test')) {
             testSwitch.tests.push({
               asserts: this.extractAsserts(methodDeclaration.node),
               endLine: methodDeclaration.node.span[2],
+              events: this.extractEvents(methodDeclaration.node),
               isExclusive: false,
-              isIgnored: methodDeclaration.annotations?.some(({ identifier }) => identifier === 'Ignore') || false,
+              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
               name: methodDeclaration.identifier,
               startLine: methodDeclaration.node.span[0],
             });
@@ -45,20 +65,35 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
     return testSwitches;
   }
 
+  private extractEvents(node: ASTNodeModel): TestEventModel[] {
+    const events: TestEventModel[] = [];
+    const methodInvocations = this.findAllMethodInvocations.execute(node);
+
+    methodInvocations.forEach(({ identifier, node }) => {
+      let type = TestEventTypeModel.unknown;
+
+      if (this.assertMethods.includes(identifier)) {
+        type = TestEventTypeModel.assert;
+      } else if (this.printMethods.includes(identifier)) {
+        type = TestEventTypeModel.print;
+      } else if (this.sleepMethods.includes(identifier)) {
+        type = TestEventTypeModel.sleep;
+      }
+
+      events.push({
+        endLine: node.span[2],
+        name: identifier,
+        startLine: node.span[0],
+        type,
+      })
+    });
+
+    return events;
+  }
+
   private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
     const methodInvocations = this.findAllMethodInvocations.execute(node);
-    const assertMethods = [
-      'assertArrayEquals',
-      'assertEquals',
-      'assertFalse',
-      'assertNotNull',
-      'assertNotSame',
-      'assertNull',
-      'assertSame',
-      'assertThat',
-      'assertTrue',
-    ];
-    const assertMethodInvocations = methodInvocations.filter(({ identifier }) => assertMethods.includes(identifier));
+    const assertMethodInvocations = methodInvocations.filter(({ identifier }) => this.assertMethods.includes(identifier));
 
     return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation))
   }
