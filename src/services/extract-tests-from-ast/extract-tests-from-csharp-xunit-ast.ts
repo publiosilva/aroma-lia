@@ -5,17 +5,17 @@ import {
   TestAssertModel,
   TestEventModel,
   TestEventTypeModel,
-  TestSwitchModel
+  TestSwitchModel,
 } from '../../domain/models';
 import {
   ExtractTestsFromAST,
   FindAllClassDeclarations,
   FindAllFunctionOrMethodDeclarations,
   FindAllFunctionOrMethodInvocations,
-  GetLiteralValue
+  GetLiteralValue,
 } from '../../domain/usecases';
 
-export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAST {
+export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAST {
   private readonly assertMethods = [
     'Assert.True',
     'Assert.False',
@@ -29,11 +29,11 @@ export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAS
   ];
 
   private readonly printMethods = [
-    'Console.WriteLine'
+    'Console.WriteLine',
   ];
 
   private readonly sleepMethods = [
-    'Thread.Sleep'
+    'Thread.Sleep',
   ];
 
   constructor(
@@ -100,7 +100,7 @@ export class CSharpXUnitExtractTestsFromASTService implements ExtractTestsFromAS
         name: identifier,
         startLine: node.span[0],
         type,
-      })
+      });
     });
 
     return events;

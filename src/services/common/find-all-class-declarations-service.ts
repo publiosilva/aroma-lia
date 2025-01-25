@@ -7,7 +7,7 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
   ) { }
 
   execute(node: ASTNodeModel): ClassDeclarationModel[] {
-    const classDeclarations: ClassDeclarationModel[] = []
+    const classDeclarations: ClassDeclarationModel[] = [];
     const classDeclarationNodeTypes = [
       'class_declaration', // Java, C#
       'class_definition', // Python
@@ -29,12 +29,12 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
         decorators,
         identifier,
         node,
-        superclasses
+        superclasses,
       });
     }
 
     const childrenClassDeclarations: ClassDeclarationModel[] = node.children.reduce((prev: ClassDeclarationModel[], curr: ASTNodeModel) => {
-      return [...prev, ...this.execute(curr)]
+      return [...prev, ...this.execute(curr)];
     }, []);
 
     return [...classDeclarations, ...childrenClassDeclarations];
@@ -47,8 +47,8 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
     return annotations?.map((annotation) => {
       return {
         node: annotation,
-        identifier: annotation?.children.find(({ type }) => type === 'identifier')?.value || ''
-      }
+        identifier: annotation?.children.find(({ type }) => type === 'identifier')?.value || '',
+      };
     }) || [];
   }
 
@@ -56,7 +56,7 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
     const superclassNodeTypes = [
       'superclass', // Java
       'base_list', // C#
-    ]
+    ];
     const superclassNodes = classNode?.children.filter(({ type }) => superclassNodeTypes.includes(type));
 
     if (superclassNodes && superclassNodes.length > 0) {

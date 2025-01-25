@@ -3,7 +3,7 @@ import { FindAllFunctionOrMethodDeclarations } from '../../domain/usecases';
 
 export class FindAllFunctionOrMethodDeclarationsService implements FindAllFunctionOrMethodDeclarations {
   execute(node: ASTNodeModel): FunctionOrMethodDeclarationModel[] {
-    const methodDeclarations: FunctionOrMethodDeclarationModel[] = []
+    const methodDeclarations: FunctionOrMethodDeclarationModel[] = [];
 
     if (['function_definition', 'method_declaration'].includes(node.type)) {
       const decorators = this.extractDecorators(node);
@@ -13,7 +13,7 @@ export class FindAllFunctionOrMethodDeclarationsService implements FindAllFuncti
     }
 
     const childrenMethodDeclarations: FunctionOrMethodDeclarationModel[] = node.children.reduce((prev: FunctionOrMethodDeclarationModel[], curr: ASTNodeModel) => {
-      return [...prev, ...this.execute(curr)]
+      return [...prev, ...this.execute(curr)];
     }, []);
 
     return [...methodDeclarations, ...childrenMethodDeclarations];

@@ -3,7 +3,7 @@ import { FindAllVariableDeclarations } from '../../domain/usecases';
 
 export class FindAllVariableDeclarationsService implements FindAllVariableDeclarations {
   execute(node: ASTNodeModel): VariableDeclararionModel[] {
-    const localVariableDeclarations: VariableDeclararionModel[] = []
+    const localVariableDeclarations: VariableDeclararionModel[] = [];
 
     if (['variable_declarator', 'local_variable_declaration'].includes(node.type)) {
       const [typeChild, declarationChild] = node.children;
@@ -14,7 +14,7 @@ export class FindAllVariableDeclarationsService implements FindAllVariableDeclar
     }
 
     const childrenLocalVariableDeclarations: VariableDeclararionModel[] = node.children.reduce((prev: VariableDeclararionModel[], curr: ASTNodeModel) => {
-      return [...prev, ...this.execute(curr)]
+      return [...prev, ...this.execute(curr)];
     }, []);
 
     return [...localVariableDeclarations, ...childrenLocalVariableDeclarations];

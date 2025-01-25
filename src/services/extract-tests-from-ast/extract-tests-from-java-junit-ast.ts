@@ -1,7 +1,7 @@
 import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
 import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
-export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST {
+export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST {
   private readonly assertMethods = [
     'assertArrayEquals',
     'assertEquals',
@@ -16,11 +16,11 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
 
   private readonly printMethods = [
     'System.out.println',
-    'println'
+    'println',
   ];
 
   private readonly sleepMethods = [
-    'Thread.sleep'
+    'Thread.sleep',
   ];
 
   constructor(
@@ -85,7 +85,7 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
         name: identifier,
         startLine: node.span[0],
         type,
-      })
+      });
     });
 
     return events;
@@ -95,13 +95,13 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
     const methodInvocations = this.findAllMethodInvocations.execute(node);
     const assertMethodInvocations = methodInvocations.filter(({ identifier }) => this.assertMethods.includes(identifier));
 
-    return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation))
+    return assertMethodInvocations.map((methodInvocation) => this.extractAssertData(methodInvocation));
   }
 
   private extractAssertData(methodInvocation: FunctionOrMethodInvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {
-      matcher: methodInvocation.identifier
-    }
+      matcher: methodInvocation.identifier,
+    };
 
     if (
       [
@@ -113,12 +113,12 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 2) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
-        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
+        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
       } else if (methodInvocation.parameterNodes?.length === 3) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[2])
-        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
-        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[2]);
+        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
       }
     } else if (
       [
@@ -129,10 +129,10 @@ export class JavaJUnitExtractTestsFromASTService implements ExtractTestsFromAST 
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 1) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
       } else if (methodInvocation.parameterNodes?.length === 2) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1])
-        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0])
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
       }
     }
 

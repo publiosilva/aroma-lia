@@ -13,126 +13,126 @@ export interface ASTNodeModel {
 }
 
 export interface ASTImportDeclarationModel extends ASTNodeModel {
-  type: "import_declaration";
+  type: 'import_declaration';
   value: string;
 }
 
 export interface ASTScopedIdentifierModel extends ASTNodeModel {
-  type: "scoped_identifier";
+  type: 'scoped_identifier';
   value: string;
 }
 
 export interface ASTIdentifierModel extends ASTNodeModel {
-  type: "identifier";
+  type: 'identifier';
   value: string;
 }
 
 export interface ASTImportModel extends ASTNodeModel {
-  type: "import";
+  type: 'import';
   value: string;
 }
 
 export interface ASTStaticModel extends ASTNodeModel {
-  type: "static";
+  type: 'static';
   value: string;
 }
 
 export interface ASTClassModel extends ASTNodeModel {
-  type: "class";
+  type: 'class';
   value: string;
 }
 
 export interface ASTModifiersModel extends ASTNodeModel {
-  type: "modifiers";
+  type: 'modifiers';
   value: string;
 }
 
 export interface ASTAnnotationModel extends ASTNodeModel {
-  type: "annotation";
+  type: 'annotation';
   value: string;
 }
 
 export interface ASTAnnotationArgumentListModel extends ASTNodeModel {
-  type: "annotation_argument_list";
+  type: 'annotation_argument_list';
   value: string;
 }
 
 export interface ASTPublicModel extends ASTNodeModel {
-  type: "public";
+  type: 'public';
   value: string;
 }
 
 export interface ASTVoidTypeModel extends ASTNodeModel {
-  type: "void_type";
+  type: 'void_type';
   value: string;
 }
 
 export interface ASTMarkerAnnotationModel extends ASTNodeModel {
-  type: "marker_annotation";
+  type: 'marker_annotation';
   value: string;
 }
 
 export interface ASTExpressionStatementModel extends ASTNodeModel {
-  type: "expression_statement";
+  type: 'expression_statement';
   value: string;
 }
 
 export interface ASTLocalVariableDeclarationModel extends ASTNodeModel {
-  type: "local_variable_declaration";
+  type: 'local_variable_declaration';
   value: string;
 }
 
 export interface ASTThrowsModel extends ASTNodeModel {
-  type: "throws";
+  type: 'throws';
   value: string;
 }
 
 export interface ASTFormalParametersModel extends ASTNodeModel {
-  type: "formal_parameters";
+  type: 'formal_parameters';
   value: string;
 }
 
 export interface ASTBlockModel extends ASTNodeModel {
-  type: "block";
+  type: 'block';
   value: string;
 }
 
 export interface ASTAsteriskModel extends ASTNodeModel {
-  type: "asterisk";
+  type: 'asterisk';
   value: string;
 }
 
 export interface ASTFieldAccessModel extends ASTNodeModel {
-  type: "field_access";
+  type: 'field_access';
   value: string;
 }
 
 export interface ASTObjectCreationExpressionModel extends ASTNodeModel {
-  type: "object_creation_expression";
+  type: 'object_creation_expression';
   value: string;
 }
 
 export interface ASTMethodInvocationModel extends ASTNodeModel {
-  type: "method_invocation";
+  type: 'method_invocation';
   value: string;
 }
 
 export interface ASTArgumentListModel extends ASTNodeModel {
-  type: "argument_list";
+  type: 'argument_list';
   value: string;
 }
 
 export interface ASTFileModel extends ASTNodeModel {
-  type: "File";
+  type: 'File';
   value: string;
 }
 
 export interface ASTDecimalIntegerLiteralModel extends ASTNodeModel {
-  type: "decimal_integer_literal";
+  type: 'decimal_integer_literal';
   value: string;
 }
 
 export interface ASTStringLiteralModel extends ASTNodeModel {
-  type: "string_literal";
+  type: 'string_literal';
   value: string;
 }

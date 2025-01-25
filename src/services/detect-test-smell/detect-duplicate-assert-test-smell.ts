@@ -6,12 +6,14 @@ export class DetectDuplicateAssertTestSmellService implements DetectTestSmell {
     const testSmells: TestSmell[] = [];
 
     for (const test of testSwitch.tests) {
-      const seenAssertions = new Set<string>();
+      const seenAssertionsKeys = new Set<string>();
+      const seenAssertionsMessages = new Set<string>();
 
       for (const assert of test.asserts) {
         const assertKey = `${assert.literalActual}-${assert.matcher}-${assert.literalExpected}`;
+        const assertMessage = assert.message;
 
-        if (seenAssertions.has(assertKey)) {
+        if (seenAssertionsKeys.has(assertKey) || (assertMessage && seenAssertionsMessages.has(assertMessage))) {
           testSmells.push({
             name: 'DuplicateAssert',
             test,
@@ -20,7 +22,11 @@ export class DetectDuplicateAssertTestSmellService implements DetectTestSmell {
             endLine: assert.endLine,
           });
         } else {
-          seenAssertions.add(assertKey);
+          seenAssertionsKeys.add(assertKey);
+
+          if (assertMessage) {
+            seenAssertionsMessages.add(assertMessage);
+          }
         }
       }
     }

@@ -1,4 +1,3 @@
-export * from './common';
 export * from './detect-test-files';
 export * from './detect-test-smell';
 export * from './download-repository';

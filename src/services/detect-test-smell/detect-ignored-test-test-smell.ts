@@ -1,7 +1,7 @@
 import { TestSmell, TestSwitchModel } from '../../domain/models';
 import { DetectTestSmell } from '../../domain/usecases';
 
-export class DetectIgnoredTestSmellService implements DetectTestSmell {
+export class DetectIgnoredTestTestSmellService implements DetectTestSmell {
   execute(testSwitch: TestSwitchModel): TestSmell[] {
     const testSmells: TestSmell[] = [];
 

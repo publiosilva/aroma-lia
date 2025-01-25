@@ -8,7 +8,10 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "quotes": ["error", "single"],
+    "comma-dangle": ["error", "always-multiline"],
+    "semi": ["error", "always"]
   },
   "settings": {
     "import/resolver": {

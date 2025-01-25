@@ -59,7 +59,7 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
       node,
       parameterListNode,
       parameterNodes,
-    }
+    };
   }
 
   private extractCallData(node: ASTNodeModel): FunctionOrMethodInvocationModel {

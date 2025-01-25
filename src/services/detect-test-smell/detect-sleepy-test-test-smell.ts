@@ -1,12 +1,12 @@
 import { TestSwitchModel, TestSmell, TestEventTypeModel } from '../../domain/models';
 import { DetectTestSmell } from '../../domain/usecases';
 
-export class DetectSleepyTestTestSmell implements DetectTestSmell {
+export class DetectSleepyTestTestSmellService implements DetectTestSmell {
   execute(testSwitch: TestSwitchModel): TestSmell[] {
     const testSmells: TestSmell[] = [];
 
     for (const test of testSwitch.tests) {
-      const sleepEvent = test.events.find(({ type }) => type === TestEventTypeModel.sleep)
+      const sleepEvent = test.events.find(({ type }) => type === TestEventTypeModel.sleep);
 
       if (sleepEvent) {
         testSmells.push({

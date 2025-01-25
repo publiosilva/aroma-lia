@@ -1,7 +1,7 @@
 import { ASTModel, ASTNodeModel, FunctionOrMethodInvocationModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
 import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
 
-export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFromAST {
+export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFromAST {
   private readonly assertMethods = [
     'assertEqual',
     'assertTrue',
@@ -19,11 +19,11 @@ export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFro
   ];
 
   private readonly printMethods = [
-    'print'
+    'print',
   ];
 
   private readonly sleepMethods = [
-    'time.sleep'
+    'time.sleep',
   ];
 
   constructor(
@@ -90,7 +90,7 @@ export class PythonUnittestExtractTestsFromASTService implements ExtractTestsFro
         name: identifier,
         startLine: node.span[0],
         type,
-      })
+      });
     });
 
     return events;
