@@ -64,9 +64,7 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
 
   private extractCallData(node: ASTNodeModel): FunctionOrMethodInvocationModel {
     const attributeNode = node.children.find(({ type }) => type === 'attribute');
-    const identifier = attributeNode?.children.filter(({ type }) => type === 'identifier').at(-1)?.value
-      || node?.children.filter(({ type }) => type === 'identifier').at(-1)?.value
-      || '';
+    const identifier = attributeNode?.children.filter(({ type }) => ['identifier', '.'].includes(type)).map(({ value }) => value).join('') || '';
     const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
     const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
 

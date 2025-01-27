@@ -11,11 +11,11 @@ export class DetectAssertionRouletteTestSmellService implements DetectTestSmell 
         for (const assert of test.asserts) {
           if (!assert.message) {
             testSmells.push({
+              endLine: assert.endLine,
               name: 'AssertionRoulette',
+              startLine: assert.startLine,
               test,
               testSwitch,
-              startLine: assert.startLine,
-              endLine: assert.endLine,
             });
           }
         }

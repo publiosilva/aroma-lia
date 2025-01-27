@@ -100,7 +100,9 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
 
   private extractAssertData(methodInvocation: FunctionOrMethodInvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {
+      endLine: methodInvocation.node.span[2],
       matcher: methodInvocation.identifier,
+      startLine: methodInvocation.node.span[0],
     };
 
     if (

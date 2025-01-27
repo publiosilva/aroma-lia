@@ -8,11 +8,11 @@ export class DetectIgnoredTestTestSmellService implements DetectTestSmell {
     if (testSwitch.isIgnored) {
       for (const test of testSwitch.tests) {
         testSmells.push({
+          endLine: test.endLine,
           name: 'IgnoredTest',
+          startLine: test.startLine,
           test,
           testSwitch,
-          startLine: test.startLine,
-          endLine: test.endLine,
         });
       }
 

@@ -16,6 +16,19 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
     'assertGreaterEqual',
     'assertLess',
     'assertLessEqual',
+    'self.assertEqual',
+    'self.assertTrue',
+    'self.assertFalse',
+    'self.assertIs',
+    'self.assertIsNot',
+    'self.assertIsNone',
+    'self.assertIsNotNone',
+    'self.assertIn',
+    'self.assertNotIn',
+    'self.assertGreater',
+    'self.assertGreaterEqual',
+    'self.assertLess',
+    'self.assertLessEqual',
   ];
 
   private readonly printMethods = [
@@ -107,7 +120,9 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
 
   private extractAssertData(methodInvocation: FunctionOrMethodInvocationModel): TestAssertModel {
     const testAssert: TestAssertModel = {
+      endLine: methodInvocation.node.span[2],
       matcher: methodInvocation.identifier,
+      startLine: methodInvocation.node.span[0],
     };
 
     if (methodInvocation.parameterNodes?.length) {

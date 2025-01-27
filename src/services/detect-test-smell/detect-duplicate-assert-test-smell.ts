@@ -15,11 +15,11 @@ export class DetectDuplicateAssertTestSmellService implements DetectTestSmell {
 
         if (seenAssertionsKeys.has(assertKey) || (assertMessage && seenAssertionsMessages.has(assertMessage))) {
           testSmells.push({
+            endLine: assert.endLine,
             name: 'DuplicateAssert',
+            startLine: assert.startLine,
             test,
             testSwitch,
-            startLine: assert.startLine,
-            endLine: assert.endLine,
           });
         } else {
           seenAssertionsKeys.add(assertKey);
