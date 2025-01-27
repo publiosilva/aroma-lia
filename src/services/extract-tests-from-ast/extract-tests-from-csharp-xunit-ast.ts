@@ -50,7 +50,7 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
     classDeclarations.forEach((classDeclaration) => {
       const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
-      if (methodDeclarations.some(({ decorators }) => decorators?.some(d => d.identifier === 'Fact' || d.identifier === 'Theory'))) {
+      if (methodDeclarations.some(({ decorators }) => decorators?.some(({ identifier }) => ['Fact', 'Theory'].includes(identifier)))) {
         const testSwitch: TestSwitchModel = {
           isIgnored: classDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
           name: classDeclaration.identifier,
@@ -59,7 +59,7 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
 
         methodDeclarations.forEach((methodDeclaration) => {
           if (
-            methodDeclaration.decorators?.some(d => d.identifier === 'Fact' || d.identifier === 'Theory')
+            methodDeclaration.decorators?.some(({ identifier }) => ['Fact', 'Theory'].includes(identifier))
           ) {
             testSwitch.tests.push({
               asserts: this.extractAsserts(methodDeclaration.node),

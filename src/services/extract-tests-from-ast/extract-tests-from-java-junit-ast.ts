@@ -39,7 +39,7 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
 
       if (methodDeclarations.some(({ decorators }) => decorators?.some(({ identifier }) => identifier === 'Test'))) {
         const testSwitch: TestSwitchModel = {
-          isIgnored: classDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
+          isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['Ignore', 'Disabled'].includes(identifier)) || false,
           name: classDeclaration.identifier,
           tests: [],
         };
@@ -51,7 +51,7 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
               endLine: methodDeclaration.node.span[2],
               events: this.extractEvents(methodDeclaration.node),
               isExclusive: false,
-              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'Ignore') || false,
+              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['Ignore', 'Disabled'].includes(identifier)) || false,
               name: methodDeclaration.identifier,
               startLine: methodDeclaration.node.span[0],
             });

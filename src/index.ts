@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { Express, Request, Response } from 'express';
 import { ExtractTestsFromAST } from './domain/usecases';
 import {
@@ -43,6 +44,8 @@ const detectTestSmellServices = [
 ];
 
 app.use(express.json());
+
+app.use(cors());
 
 app.post('/test-smells/detect', async (req: Request, res: Response) => {
   const { language, framework, repositoryURL }: { language: string, framework: string, repositoryURL: string } = req.body;

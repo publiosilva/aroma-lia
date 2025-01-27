@@ -17,7 +17,7 @@ export class DetectCSharpXUnitTestFilesService implements DetectTestFiles {
         } else if (entry.isFile() && entry.name.endsWith('.cs')) {
           const fileContent = await fs.promises.readFile(fullPath, 'utf-8');
 
-          if (fileContent.includes('[Fact]') || fileContent.includes('[Theory]') || entry.name.endsWith('Tests.cs')) {
+          if (fileContent.includes('Fact') || fileContent.includes('Theory') || entry.name.endsWith('Tests.cs')) {
             testFiles.push(fullPath);
           }
         }

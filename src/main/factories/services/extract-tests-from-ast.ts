@@ -6,7 +6,9 @@ export function makeExtractTestsFromCSharpXUnitASTService(): ExtractTestsFromAST
     new FindAllClassDeclarationsService(
       new GetLiteralValueService()
     ),
-    new FindAllFunctionOrMethodDeclarationsService(),
+    new FindAllFunctionOrMethodDeclarationsService(
+      new GetLiteralValueService()
+    ),
     new FindAllFunctionOrMethodInvocationsService(
       new GetLiteralValueService()
     ),
@@ -19,7 +21,9 @@ export function makeExtractTestsFromJavaJUnitASTService(): ExtractTestsFromAST {
     new FindAllClassDeclarationsService(
       new GetLiteralValueService()
     ),
-    new FindAllFunctionOrMethodDeclarationsService(),
+    new FindAllFunctionOrMethodDeclarationsService(
+      new GetLiteralValueService()
+    ),
     new FindAllFunctionOrMethodInvocationsService(
       new GetLiteralValueService()
     ),
@@ -32,7 +36,9 @@ export function makeExtractTestsFromPythonUnittestASTService(): ExtractTestsFrom
     new FindAllClassDeclarationsService(
       new GetLiteralValueService()
     ),
-    new FindAllFunctionOrMethodDeclarationsService(),
+    new FindAllFunctionOrMethodDeclarationsService(
+      new GetLiteralValueService()
+    ),
     new FindAllFunctionOrMethodInvocationsService(
       new GetLiteralValueService()
     ),

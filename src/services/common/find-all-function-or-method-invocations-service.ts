@@ -105,9 +105,10 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
   }
 
   private extractMethodInvocationData(node: ASTNodeModel): FunctionOrMethodInvocationModel | undefined {
-    const identifier = node.children.find(({ type }) => type === 'identifier')?.value || '';
+    const identifiersNodes = node.children.filter(({ type }) => ['identifier', '.'].includes(type));
     const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
     const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
+    const identifier = identifiersNodes?.map(({ value }) => value).join('');
 
     return identifier ? { identifier, node, parameterListNode, parameterNodes } : undefined;
   }

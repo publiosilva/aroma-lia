@@ -43,7 +43,7 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
 
         if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test'))) {
           const testSwitch: TestSwitchModel = {
-            isIgnored: classDeclaration.decorators?.some(({ identifier }) => identifier === 'skip') || false,
+            isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['skip', 'unittest.skip'].includes(identifier)) || false,
             name: classDeclaration.identifier,
             tests: [],
           };
@@ -55,7 +55,7 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
                 endLine: methodDeclaration.node.span[2],
                 events: this.extractEvents(methodDeclaration.node),
                 isExclusive: false,
-                isIgnored: methodDeclaration.decorators?.some(({ identifier }) => identifier === 'skip') || false,
+                isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['skip', 'unittest.skip'].includes(identifier)) || false,
                 name: methodDeclaration.identifier,
                 startLine: methodDeclaration.node.span[0],
               });
