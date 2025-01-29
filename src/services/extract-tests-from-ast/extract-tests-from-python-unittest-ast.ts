@@ -56,7 +56,7 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
 
         if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test'))) {
           const testSwitch: TestSwitchModel = {
-            isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['skip', 'unittest.skip'].includes(identifier)) || false,
+            isIgnored: classDeclaration.decorators?.some(({ identifier }) => ['skip', 'unittest.skip'].includes(identifier)) || false,
             name: classDeclaration.identifier,
             tests: [],
           };
@@ -129,7 +129,16 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
       testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
 
       if (methodInvocation.parameterNodes.length > 1) {
-        if (['assertTrue', 'assertFalse', 'assertIsNone', 'assertIsNotNone'].includes(methodInvocation.identifier)) {
+        if ([
+          'assertTrue',
+          'assertFalse',
+          'assertIsNone',
+          'assertIsNotNone',
+          'self.assertTrue',
+          'self.assertFalse',
+          'self.assertIsNone',
+          'self.assertIsNotNone',
+        ].includes(methodInvocation.identifier)) {
           testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
         } else {
           testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);

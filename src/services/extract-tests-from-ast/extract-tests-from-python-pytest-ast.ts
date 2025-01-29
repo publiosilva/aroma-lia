@@ -1,0 +1,134 @@
+import { ASTModel, ASTNodeModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
+import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
+
+export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromAST {
+  private readonly printMethods = [
+    'print',
+  ];
+
+  private readonly sleepMethods = [
+    'time.sleep',
+  ];
+
+  constructor(
+    private findAllClassDeclarations: FindAllClassDeclarations,
+    private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
+    private findAllMethodInvocations: FindAllFunctionOrMethodInvocations,
+    private getLiteralValue: GetLiteralValue
+  ) { }
+
+  execute(ast: ASTModel): TestSwitchModel[] {
+    const testSwitches: TestSwitchModel[] = [];
+    const classDeclarations = this.findAllClassDeclarations.execute(ast);
+
+    classDeclarations.forEach((classDeclaration) => {
+      if (classDeclaration.identifier.startsWith('Test')) {
+        const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
+
+        if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test_'))) {
+          const testSwitch: TestSwitchModel = {
+            isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+            name: classDeclaration.identifier,
+            tests: [],
+          };
+
+          methodDeclarations.forEach((methodDeclaration) => {
+            if (methodDeclaration?.identifier?.startsWith('test_')) {
+              const asserts = this.extractAsserts(methodDeclaration.node);
+
+              testSwitch.tests.push({
+                asserts: asserts,
+                endLine: methodDeclaration.node.span[2],
+                events: this.extractEvents(methodDeclaration.node, asserts),
+                isExclusive: false,
+                isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+                name: methodDeclaration.identifier,
+                startLine: methodDeclaration.node.span[0],
+              });
+            }
+          });
+
+          testSwitches.push(testSwitch);
+        }
+      }
+    });
+
+    return testSwitches;
+  }
+
+  private extractEvents(node: ASTNodeModel, asserts: TestAssertModel[]): TestEventModel[] {
+    const events: TestEventModel[] = [];
+    const methodInvocations = this.findAllMethodInvocations.execute(node);
+
+    methodInvocations.forEach(({ identifier, node }) => {
+      let type = TestEventTypeModel.unknown;
+
+      if (this.printMethods.includes(identifier)) {
+        type = TestEventTypeModel.print;
+      } else if (this.sleepMethods.includes(identifier)) {
+        type = TestEventTypeModel.sleep;
+      }
+
+      events.push({
+        endLine: node.span[2],
+        name: identifier,
+        startLine: node.span[0],
+        type,
+      });
+    });
+
+    asserts.forEach((assert) => {
+      events.push({
+        endLine: assert.endLine,
+        name: assert.matcher,
+        startLine: assert.startLine,
+        type: TestEventTypeModel.assert,
+      });
+    });
+
+    return events.sort((a, b) => a.startLine - b.startLine);
+  }
+
+  private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
+    const asserts: TestAssertModel[] = [];
+
+    node.children.forEach((child) => {      
+      if (child.type === 'assert_statement') {
+        asserts.push(this.extractAssertData(child));
+      } else {
+        asserts.push(...this.extractAsserts(child));
+      }
+    });
+
+    return asserts;
+  }
+
+  private extractAssertData(assertStatementNode: ASTNodeModel): TestAssertModel {
+    const testAssert: TestAssertModel = {
+      endLine: assertStatementNode.span[2],
+      matcher: '',
+      startLine: assertStatementNode.span[0],
+    };
+    const comparisonOperatorNode = assertStatementNode.children.find(({ type }) => type === 'comparison_operator');
+
+    if (comparisonOperatorNode) {
+      const first = comparisonOperatorNode.children.at(0);
+      const last = comparisonOperatorNode.children.at(-1);
+      const middle = comparisonOperatorNode.children.slice(1, -1);
+
+      if (first && last && middle) {
+        testAssert.literalActual = this.getLiteralValue.execute(first);
+        testAssert.matcher = middle.map(({ value }) => value).join(' ');
+        testAssert.literalExpected = this.getLiteralValue.execute(last);
+      }
+    }
+
+    const stringNode = assertStatementNode.children.find(({ type }) => type === 'string');
+
+    if (stringNode) {
+      testAssert.message = this.getLiteralValue.execute(stringNode);
+    }
+
+    return testAssert;
+  }
+}

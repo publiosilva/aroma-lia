@@ -15,6 +15,8 @@ import {
   makeExtractTestsFromJavaJUnitASTService,
   makeExtractTestsFromPythonUnittestASTService,
   makeGenerateASTService,
+  makeExtractTestsFromPythonPyTestASTService,
+  makeDetectPythonPyTestTestFilesService,
 } from './main/factories';
 
 const app: Express = express();
@@ -24,12 +26,14 @@ const detectTestFilesServices = new Map([
   ['csharp', new Map([['xunit', makeDetectCSharpXUnitTestFilesService()]])],
   ['java', new Map([['junit', makeDetectJavaJUnitTestFilesService()]])],
   ['python', new Map([['unittest', makeDetectPythonUnittestTestFilesService()]])],
+  ['python', new Map([['pytest', makeDetectPythonPyTestTestFilesService()]])],
 ]);
 
 const extractTestsFromASTServices = new Map([
   ['csharp', new Map<string, ExtractTestsFromAST>([['xunit', makeExtractTestsFromCSharpXUnitASTService()]])],
   ['java', new Map<string, ExtractTestsFromAST>([['junit', makeExtractTestsFromJavaJUnitASTService()]])],
   ['python', new Map<string, ExtractTestsFromAST>([['unittest', makeExtractTestsFromPythonUnittestASTService()]])],
+  ['python', new Map<string, ExtractTestsFromAST>([['pytest', makeExtractTestsFromPythonPyTestASTService()]])],
 ]);
 
 const downloadRepositoryService = makeDownloadGithubRepositoryService();

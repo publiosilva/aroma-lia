@@ -31,9 +31,9 @@ export interface TestEventModel {
 
 export interface TestAssertModel {
   literalActual?: string;
-  matcher?: string;
+  matcher: string;
   literalExpected?: string;
   message?: string;
-  startLine?: number;
-  endLine?: number;
+  startLine: number;
+  endLine: number;
 }
