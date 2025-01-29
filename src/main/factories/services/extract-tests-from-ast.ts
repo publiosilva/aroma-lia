@@ -1,5 +1,5 @@
 import { ExtractTestsFromAST } from '../../../domain/usecases';
-import { ExtractTestsFromCSharpXUnitASTService, ExtractTestsFromJavaJUnitASTService, ExtractTestsFromPythonPyTestASTService, ExtractTestsFromPythonUnittestASTService, FindAllClassDeclarationsService, FindAllFunctionOrMethodDeclarationsService, FindAllFunctionOrMethodInvocationsService, GetLiteralValueService } from '../../../services';
+import { ExtractTestsFromCSharpXUnitASTService, ExtractTestsFromJavaJUnitASTService, ExtractTestsFromPythonPyTestASTService, ExtractTestsFromPythonUnittestASTService, FindAllClassDeclarationsService, FindAllFunctionOrMethodDeclarationsService, FindAllFunctionOrMethodInvocationsService, GetLiteralValueService, IsAInsideOfBService } from '../../../services';
 
 export function makeExtractTestsFromCSharpXUnitASTService(): ExtractTestsFromAST {
   return new ExtractTestsFromCSharpXUnitASTService(
@@ -42,7 +42,8 @@ export function makeExtractTestsFromPythonPyTestASTService(): ExtractTestsFromAS
     new FindAllFunctionOrMethodInvocationsService(
       new GetLiteralValueService()
     ),
-    new GetLiteralValueService()
+    new GetLiteralValueService(),
+    new IsAInsideOfBService(),
   );
 }
 

@@ -1,5 +1,5 @@
 import { ASTModel, ASTNodeModel, TestAssertModel, TestEventModel, TestEventTypeModel, TestSwitchModel } from '../../domain/models';
-import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue } from '../../domain/usecases';
+import { ExtractTestsFromAST, FindAllClassDeclarations, FindAllFunctionOrMethodDeclarations, FindAllFunctionOrMethodInvocations, GetLiteralValue, IsAInsideOfB } from '../../domain/usecases';
 
 export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromAST {
   private readonly printMethods = [
@@ -14,11 +14,18 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
     private findAllClassDeclarations: FindAllClassDeclarations,
     private findAllMethodDeclarations: FindAllFunctionOrMethodDeclarations,
     private findAllMethodInvocations: FindAllFunctionOrMethodInvocations,
-    private getLiteralValue: GetLiteralValue
+    private getLiteralValue: GetLiteralValue,
+    private isAInsideOfB: IsAInsideOfB,
   ) { }
 
   execute(ast: ASTModel): TestSwitchModel[] {
-    const testSwitches: TestSwitchModel[] = [];
+    const testSwitchesMap: Map<string, TestSwitchModel> = new Map([
+      ['Unnamed', {
+        isIgnored: false,
+        name: 'Unnamed',
+        tests: [],
+      }],
+    ]);
     const classDeclarations = this.findAllClassDeclarations.execute(ast);
 
     classDeclarations.forEach((classDeclaration) => {
@@ -26,34 +33,40 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
         const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
         if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test_'))) {
-          const testSwitch: TestSwitchModel = {
-            isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+          testSwitchesMap.set(classDeclaration.identifier, {
+            isIgnored: classDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
             name: classDeclaration.identifier,
             tests: [],
-          };
-
-          methodDeclarations.forEach((methodDeclaration) => {
-            if (methodDeclaration?.identifier?.startsWith('test_')) {
-              const asserts = this.extractAsserts(methodDeclaration.node);
-
-              testSwitch.tests.push({
-                asserts: asserts,
-                endLine: methodDeclaration.node.span[2],
-                events: this.extractEvents(methodDeclaration.node, asserts),
-                isExclusive: false,
-                isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
-                name: methodDeclaration.identifier,
-                startLine: methodDeclaration.node.span[0],
-              });
-            }
           });
-
-          testSwitches.push(testSwitch);
         }
       }
     });
 
-    return testSwitches;
+    const methodDeclarations = this.findAllMethodDeclarations.execute(ast);
+
+    methodDeclarations.forEach((methodDeclaration) => {
+      if (methodDeclaration?.identifier?.startsWith('test_')) {
+        const asserts = this.extractAsserts(methodDeclaration.node);
+        const test = {
+          asserts: asserts,
+          endLine: methodDeclaration.node.span[2],
+          events: this.extractEvents(methodDeclaration.node, asserts),
+          isExclusive: false,
+          isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+          name: methodDeclaration.identifier,
+          startLine: methodDeclaration.node.span[0],
+        };
+        const parent = classDeclarations.find((classDeclaration) => this.isAInsideOfB.execute(methodDeclaration.node, classDeclaration.node));
+      
+        if (parent) {
+          testSwitchesMap.get(parent.identifier)?.tests.push(test);
+        } else {
+          testSwitchesMap.get('Unnamed')?.tests.push(test);
+        }
+      }
+    });
+
+    return Array.from(testSwitchesMap.values());
   }
 
   private extractEvents(node: ASTNodeModel, asserts: TestAssertModel[]): TestEventModel[] {
@@ -92,7 +105,7 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
   private extractAsserts(node: ASTNodeModel): TestAssertModel[] {
     const asserts: TestAssertModel[] = [];
 
-    node.children.forEach((child) => {      
+    node.children.forEach((child) => {
       if (child.type === 'assert_statement') {
         asserts.push(this.extractAssertData(child));
       } else {
