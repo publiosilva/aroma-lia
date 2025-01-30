@@ -17,7 +17,11 @@ export class DownloadGithubRepositoryService implements DownloadRepository {
     const owner = match[1];
     const repo = match[2];
 
-    const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/main.zip`;
+    const repoInfoUrl = `https://api.github.com/repos/${owner}/${repo}`;
+    const repoResponse = await axios.get(repoInfoUrl);
+    const defaultBranch = repoResponse.data.default_branch;
+
+    const zipUrl = `https://github.com/${owner}/${repo}/archive/refs/heads/${defaultBranch}.zip`;
 
     const response = await axios({
       method: 'get',
@@ -26,7 +30,6 @@ export class DownloadGithubRepositoryService implements DownloadRepository {
     });
 
     const tempDir = os.tmpdir();
-
     const zipFilePath = path.join(tempDir, `${repo}.zip`);
 
     fs.writeFileSync(zipFilePath, response.data);

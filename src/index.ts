@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import { Express, Request, Response } from 'express';
 import { ExtractTestsFromAST } from './domain/usecases';
 import {
@@ -56,7 +57,7 @@ app.post('/test-smells/detect', async (req: Request, res: Response) => {
 
   if (!language || !framework || !repositoryURL) {
     return res.status(400).json({
-      error: 'Os campos language, framework e repositoryURL são obrigatórios.',
+      message: 'Language, framework and repository URL are required.',
     });
   }
 
@@ -65,7 +66,7 @@ app.post('/test-smells/detect', async (req: Request, res: Response) => {
 
   if (!detectTestFilesService || !extractTestsFromASTService) {
     return res.status(400).json({
-      error: 'A linguagem ou o framework não são suportados.',
+      message: 'Language or framework is not supported.',
     });
   }
 
@@ -80,13 +81,14 @@ app.post('/test-smells/detect', async (req: Request, res: Response) => {
         const smellsForTestSwitch = await Promise.all(
           detectTestSmellServices.map(service => service.execute(testSwitch))
         );
-        return smellsForTestSwitch.filter(smell => smell.length > 0);
+        return smellsForTestSwitch.filter(smell => smell.length > 0).flat();
       }));
     
-      const flattenedSmells = smells.flat().filter(smell => smell.length > 0);
+      const flattenedSmells = smells.filter(smell => smell.length > 0).flat();
     
       return {
-        testFilePath,
+        testFileContent: fs.readFileSync(testFilePath).toString(),
+        testFilePath: testFilePath.replace(`${projectFolder}/`, ''),
         testSmells: flattenedSmells,
       };
     }));
@@ -94,7 +96,7 @@ app.post('/test-smells/detect', async (req: Request, res: Response) => {
     return res.status(200).json(testSmells);
   } catch (error) {
     return res.status(500).json({
-      error: 'Ocorreu um erro ao tentar detectar os test smells. Tente novamente mais tarde.',
+      message: 'An error occurred when trying to detect test smells. Please try again later.',
     });
   }
 });

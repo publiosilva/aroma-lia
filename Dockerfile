@@ -12,7 +12,7 @@ RUN cargo build --release
 
 
 # Stage 2: Node.js build
-FROM node:16 AS node-build
+FROM node:20 AS node-build
 
 # Set working directory for Node.js
 WORKDIR /usr/src
@@ -20,6 +20,17 @@ WORKDIR /usr/src
 # Copy necessary files for Node.js build
 COPY package*.json tsconfig.json ./
 COPY ./src ./src
+COPY ./src-web/src ./src-web/src
+COPY ./src-web/public ./src-web/public
+COPY ./src-web/index.html ./src-web/index.html
+COPY ./src-web/vite.config.js ./src-web/vite.config.js
+COPY ./src-web/package*.json ./src-web/
+
+# Install dependencies and build backend
+RUN npm install && npm run build
+
+# Set working directory for Node.js
+WORKDIR /usr/src/src-web
 
 # Install dependencies and build frontend
 RUN npm install && npm run build
@@ -46,16 +57,19 @@ WORKDIR /app
 # Copy built Rust binary from Rust build stage
 COPY --from=rust-build /usr/src/lib/source-code-parser/target/release/source-code-parser-web ./source-code-parser-web
 
-# Copy built frontend from Node.js build stage
+# Copy built backend from Node.js build stage
 COPY --from=node-build /usr/src/dist ./aromalia
 COPY --from=node-build /usr/src/node_modules ./aromalia/node_modules
+
+# Copy built frontend from Node.js build stage
+COPY --from=node-build /usr/src/src-web/dist ./aromalia-web
 
 # Set up Supervisor configuration
 WORKDIR /etc/supervisor
 COPY supervisord.conf .
 
 # Expose application ports
-EXPOSE 8080 3000
+EXPOSE 3000 8000 8080
 
 # Define default command to start Supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
