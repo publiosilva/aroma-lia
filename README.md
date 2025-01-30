@@ -18,7 +18,7 @@ docker build -t aromalia .
 Execute the following command to start AromaLIA:
 
 ```sh
-docker run --rm -it -p 8000:8000 aromalia
+docker run --rm -it -p 3000:3000 -p 8000:8000 aromalia
 ```
 
 ### Access the Application
