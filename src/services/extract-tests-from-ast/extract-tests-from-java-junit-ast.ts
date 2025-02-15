@@ -12,6 +12,7 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
     'assertSame',
     'assertThat',
     'assertTrue',
+    'fail',
   ];
 
   private readonly printMethods = [
@@ -21,6 +22,25 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
 
   private readonly sleepMethods = [
     'Thread.sleep',
+  ];
+
+  private readonly disableAnnotations = [
+    'Ignore',
+    'Disabled',
+    'EnabledOnOs',
+    'DisabledOnOs',
+    'EnabledOnJre',
+    'EnabledForJreRange',
+    'DisabledOnJre',
+    'DisabledForJreRange',
+    'EnabledInNativeImage',
+    'DisabledInNativeImage',
+    'EnabledIfSystemProperty',
+    'DisabledIfSystemProperty',
+    'EnabledIfEnvironmentVariable',
+    'DisabledIfEnvironmentVariable',
+    'EnabledIf',
+    'DisabledIf',
   ];
 
   constructor(
@@ -36,22 +56,28 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
 
     classDeclarations.forEach((classDeclaration) => {
       const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
+      const hasTestMethods = methodDeclarations.some(
+        ({ decorators, identifier }) => decorators?.some(({ identifier }) => identifier === 'Test')
+          || (classDeclaration.superclasses?.includes('TestCase') && identifier.startsWith('test'))
+      );
 
-      if (methodDeclarations.some(({ decorators }) => decorators?.some(({ identifier }) => identifier === 'Test'))) {
+      if (hasTestMethods) {
         const testSwitch: TestSwitchModel = {
-          isIgnored: classDeclaration.decorators?.some(({ identifier }) =>  ['Ignore', 'Disabled'].includes(identifier)) || false,
+          isIgnored: classDeclaration.decorators?.some(({ identifier }) => this.disableAnnotations.includes(identifier)) || false,
           name: classDeclaration.identifier,
           tests: [],
         };
 
         methodDeclarations.forEach((methodDeclaration) => {
-          if (methodDeclaration?.decorators?.some(({ identifier }) => identifier === 'Test')) {
+          const isTestMethod = methodDeclaration?.decorators?.some(({ identifier }) => identifier === 'Test') || methodDeclaration.identifier.startsWith('test');
+
+          if (isTestMethod) {
             testSwitch.tests.push({
               asserts: this.extractAsserts(methodDeclaration.node),
               endLine: methodDeclaration.node.span[2],
               events: this.extractEvents(methodDeclaration.node),
               isExclusive: false,
-              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['Ignore', 'Disabled'].includes(identifier)) || false,
+              isIgnored: methodDeclaration.decorators?.some(({ identifier }) => this.disableAnnotations.includes(identifier)) || false,
               name: methodDeclaration.identifier,
               startLine: methodDeclaration.node.span[0],
             });
@@ -138,6 +164,12 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
       }
     }
 
+    if (['fail'].includes(methodInvocation.identifier)) {
+      if (methodInvocation.parameterNodes?.length === 1) {
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+      }
+    }
+ 
     return testAssert;
   }
 }

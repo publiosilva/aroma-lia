@@ -7,7 +7,17 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
   ];
 
   private readonly sleepMethods = [
+    'asyncio.sleep',
     'time.sleep',
+  ];
+
+  private readonly disableAnnotations = [
+    'skip',
+    'mark.skip',
+    'pytest.mark.skip',
+    'skipif',
+    'mark.skipif',
+    'pytest.mark.skipif',
   ];
 
   constructor(
@@ -34,7 +44,7 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
 
         if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test_'))) {
           testSwitchesMap.set(classDeclaration.identifier, {
-            isIgnored: classDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+            isIgnored: classDeclaration.decorators?.some(({ identifier }) => this.disableAnnotations.includes(identifier)) || false,
             name: classDeclaration.identifier,
             tests: [],
           });
@@ -52,12 +62,12 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
           endLine: methodDeclaration.node.span[2],
           events: this.extractEvents(methodDeclaration.node, asserts),
           isExclusive: false,
-          isIgnored: methodDeclaration.decorators?.some(({ identifier }) => ['skip', 'mark.skip', 'pytest.mark.skip'].includes(identifier)) || false,
+          isIgnored: methodDeclaration.decorators?.some(({ identifier }) => this.disableAnnotations.includes(identifier)) || false,
           name: methodDeclaration.identifier,
           startLine: methodDeclaration.node.span[0],
         };
         const parent = classDeclarations.find((classDeclaration) => this.isAInsideOfB.execute(methodDeclaration.node, classDeclaration.node));
-      
+
         if (parent) {
           testSwitchesMap.get(parent.identifier)?.tests.push(test);
         } else {
