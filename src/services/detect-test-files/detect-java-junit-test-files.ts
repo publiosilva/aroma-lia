@@ -17,7 +17,7 @@ export class DetectJavaJUnitTestFilesService implements DetectTestFiles {
         } else if (entry.isFile() && entry.name.endsWith('.java')) {
           const fileContent = await fs.promises.readFile(fullPath, 'utf-8');
 
-          if (fileContent.includes('@Test') || entry.name.endsWith('Test.java')) {
+          if (fileContent.includes('@Test') || fileContent.includes('TestCase') || entry.name.endsWith('Test.java')) {
             testFiles.push(fullPath);
           }
         }

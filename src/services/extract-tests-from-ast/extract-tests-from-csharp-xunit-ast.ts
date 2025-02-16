@@ -26,6 +26,19 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
     'Assert.Throws',
     'Assert.Null',
     'Assert.NotNull',
+    'Assert.Same',
+    'Assert.NotSame',
+    'Assert.Fail',
+    'Assert.InRange',
+    'Assert.IsAssignableFrom',
+    'Assert.Empty',
+    'Assert.IsType',
+    'Assert.IsNotAssignableFrom',
+    'Assert.NotEmpty',
+    'Assert.IsNotType',
+    'Assert.NotInRange',
+    'Assert.Equivalent',
+    'Assert.Single',
   ];
 
   private readonly printMethods = [
@@ -33,7 +46,10 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
   ];
 
   private readonly sleepMethods = [
+    'System.Threading.Thread.Sleep',
+    'Threading.Thread.Sleep',
     'Thread.Sleep',
+    'Sleep',
   ];
 
   constructor(
@@ -77,7 +93,7 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
       }
     });
 
-    return testSwitches;
+    return testSwitches.filter(({ tests }) => tests.length > 0);
   }
 
   private extractEvents(node: ASTNodeModel): TestEventModel[] {
@@ -123,18 +139,21 @@ export class ExtractTestsFromCSharpXUnitASTService implements ExtractTestsFromAS
     };
 
     if (methodInvocation.parameterNodes?.length) {
-      testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+      if (['Assert.Fail'].includes(methodInvocation.identifier)) {
+        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+      } else {
+        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+      }
 
       if (methodInvocation.parameterNodes.length > 1) {
-        if (['Assert.True', 'Assert.False', 'Assert.Null', 'Assert.NotNull'].includes(methodInvocation.identifier)) {
+        if ([
+          'Assert.True',
+          'Assert.False',
+        ].includes(methodInvocation.identifier)) {
           testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
         } else {
           testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
         }
-      }
-
-      if (methodInvocation.parameterNodes.length > 2) {
-        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[2]);
       }
     }
 

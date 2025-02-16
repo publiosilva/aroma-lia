@@ -9,6 +9,7 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
   private readonly sleepMethods = [
     'asyncio.sleep',
     'time.sleep',
+    'sleep',
   ];
 
   private readonly disableAnnotations = [
@@ -42,7 +43,7 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
       if (classDeclaration.identifier.startsWith('Test')) {
         const methodDeclarations = this.findAllMethodDeclarations.execute(classDeclaration.node);
 
-        if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test_'))) {
+        if (methodDeclarations.some(({ identifier }) => identifier.startsWith('test'))) {
           testSwitchesMap.set(classDeclaration.identifier, {
             isIgnored: classDeclaration.decorators?.some(({ identifier }) => this.disableAnnotations.includes(identifier)) || false,
             name: classDeclaration.identifier,
@@ -55,7 +56,7 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
     const methodDeclarations = this.findAllMethodDeclarations.execute(ast);
 
     methodDeclarations.forEach((methodDeclaration) => {
-      if (methodDeclaration?.identifier?.startsWith('test_')) {
+      if (methodDeclaration?.identifier?.startsWith('test')) {
         const asserts = this.extractAsserts(methodDeclaration.node);
         const test = {
           asserts: asserts,
@@ -76,12 +77,14 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
       }
     });
 
-    return Array.from(testSwitchesMap.values());
+    return Array.from(testSwitchesMap.values()).filter(({ tests }) => tests.length > 0);
   }
 
   private extractEvents(node: ASTNodeModel, asserts: TestAssertModel[]): TestEventModel[] {
     const events: TestEventModel[] = [];
     const methodInvocations = this.findAllMethodInvocations.execute(node);
+
+    console.log(methodInvocations);
 
     methodInvocations.forEach(({ identifier, node }) => {
       let type = TestEventTypeModel.unknown;
@@ -144,6 +147,11 @@ export class ExtractTestsFromPythonPyTestASTService implements ExtractTestsFromA
         testAssert.matcher = middle.map(({ value }) => value).join(' ');
         testAssert.literalExpected = this.getLiteralValue.execute(last);
       }
+    } else {
+      const actualNode = assertStatementNode.children.find(({ type }) => type !== 'assert');
+
+      testAssert.literalActual = actualNode ? this.getLiteralValue.execute(actualNode) : '';
+      testAssert.matcher = 'is True';
     }
 
     const stringNode = assertStatementNode.children.find(({ type }) => type === 'string');

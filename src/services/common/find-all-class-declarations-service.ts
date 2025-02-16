@@ -7,6 +7,10 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
   ) { }
 
   execute(node: ASTNodeModel): ClassDeclarationModel[] {
+    return this.extractClassDeclarations(node);
+  }
+
+  private extractClassDeclarations(node: ASTNodeModel, parent: ASTNodeModel | null = null): ClassDeclarationModel[] {
     const classDeclarations: ClassDeclarationModel[] = [];
     const classDeclarationNodeTypes = [
       'class_declaration', // Java, C#
@@ -20,7 +24,7 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
         'declaration_list', // C#
       ];
       const classBodyNode = node?.children.find(({ type }) => classBodyNodeTypes.includes(type));
-      const decorators = this.extractDecorators(node);
+      const decorators = parent && parent.type == 'decorated_definition' ? this.extractDecorators(parent) : this.extractDecorators(node);
       const identifier = node?.children.find(({ type }) => type === 'identifier')?.value || '';
       const superclasses = this.extractSuperclasses(node);
 
@@ -34,22 +38,39 @@ export class FindAllClassDeclarationsService implements FindAllClassDeclarations
     }
 
     const childrenClassDeclarations: ClassDeclarationModel[] = node.children.reduce((prev: ClassDeclarationModel[], curr: ASTNodeModel) => {
-      return [...prev, ...this.execute(curr)];
+      return [...prev, ...this.extractClassDeclarations(curr, node)];
     }, []);
 
     return [...classDeclarations, ...childrenClassDeclarations];
   }
 
   private extractDecorators(node: ASTNodeModel): DecoratorModel[] {
-    const modifiers = node?.children.find(({ type }) => type === 'modifiers');
-    const annotations = modifiers?.children.filter(({ type }) => type === 'annotation');
+    const decorators: DecoratorModel[] = [];
+    const modifiersNode = node?.children.find(({ type }) => type === 'modifiers');
 
-    return annotations?.map((annotation) => {
-      return {
-        node: annotation,
-        identifier: annotation?.children.find(({ type }) => type === 'identifier')?.value || '',
-      };
-    }) || [];
+    if (modifiersNode) {
+      const markerAnnotations = modifiersNode?.children.filter(({ type }) => ['annotation', 'marker_annotation'].includes(type));
+
+      markerAnnotations.forEach((markerAnnotation) => {
+        decorators.push({
+          identifier: markerAnnotation?.children.find(({ type }) => type === 'identifier')?.value || '',
+          node: markerAnnotation,
+        });
+      });
+    }
+
+    const decoratorNodes = node?.children.filter(({ type }) => type === 'decorator') || [];
+
+    decoratorNodes.forEach((node) => {
+      const dottedNameNode = node?.children.find(({ type }) => type === 'dotted_name');
+
+      decorators.push({
+        identifier: dottedNameNode ? this.getLiteralValue.execute(dottedNameNode) : '',
+        node: node,
+      });
+    });
+
+    return decorators;
   }
 
   private extractSuperclasses(classNode: ASTNodeModel): string[] {

@@ -80,7 +80,7 @@ export class ExtractTestsFromPythonUnittestASTService implements ExtractTestsFro
       }
     });
 
-    return testSwitches;
+    return testSwitches.filter(({ tests }) => tests.length > 0);
   }
 
   private extractEvents(node: ASTNodeModel): TestEventModel[] {

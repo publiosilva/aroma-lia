@@ -63,12 +63,21 @@ export class FindAllFunctionOrMethodInvocationsService implements FindAllFunctio
   }
 
   private extractCallData(node: ASTNodeModel): FunctionOrMethodInvocationModel {
-    const attributeNode = node.children.find(({ type }) => type === 'attribute');
-    const identifier = attributeNode?.children.filter(({ type }) => ['identifier', '.'].includes(type)).map(({ value }) => value).join('') || '';
-    const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
-    const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
+    const callIdentifier = node?.children.filter(({ type }) => ['identifier', '.'].includes(type)).map(({ value }) => value).join('') || '';
 
-    return { identifier, node, parameterListNode, parameterNodes };
+    if (callIdentifier) {
+      const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
+      const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
+
+      return { identifier: callIdentifier, node, parameterListNode, parameterNodes };
+    } else {
+      const attributeNode = node.children.find(({ type }) => type === 'attribute');
+      const identifier = attributeNode ? this.getLiteralValue.execute(attributeNode) : '';
+      const parameterListNode = node.children.find(({ type }) => type === 'argument_list');
+      const parameterNodes = parameterListNode?.children.filter(({ type }) => !['(', ',', ')'].includes(type));
+
+      return { identifier, node, parameterListNode, parameterNodes };
+    }
   }
 
   private extractCallExpressionData(

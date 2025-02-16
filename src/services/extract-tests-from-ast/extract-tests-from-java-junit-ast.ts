@@ -13,6 +13,26 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
     'assertThat',
     'assertTrue',
     'fail',
+    'Assert.assertArrayEquals',
+    'Assert.assertEquals',
+    'Assert.assertFalse',
+    'Assert.assertNotNull',
+    'Assert.assertNotSame',
+    'Assert.assertNull',
+    'Assert.assertSame',
+    'Assert.assertThat',
+    'Assert.assertTrue',
+    'Assert.fail',
+    'Assertions.assertArrayEquals',
+    'Assertions.assertEquals',
+    'Assertions.assertFalse',
+    'Assertions.assertNotNull',
+    'Assertions.assertNotSame',
+    'Assertions.assertNull',
+    'Assertions.assertSame',
+    'Assertions.assertThat',
+    'Assertions.assertTrue',
+    'Assertions.fail',
   ];
 
   private readonly printMethods = [
@@ -88,7 +108,7 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
       }
     });
 
-    return testSwitches;
+    return testSwitches.filter(({ tests }) => tests.length > 0);
   }
 
   private extractEvents(node: ASTNodeModel): TestEventModel[] {
@@ -138,15 +158,27 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
         'assertNotSame',
         'assertSame',
         'assertThat',
+        'Assert.assertArrayEquals',
+        'Assert.assertEquals',
+        'Assert.assertNotSame',
+        'Assert.assertSame',
+        'Assert.assertThat',
+        'Assertions.assertArrayEquals',
+        'Assertions.assertEquals',
+        'Assertions.assertNotSame',
+        'Assertions.assertSame',
+        'Assertions.assertThat',
       ].includes(methodInvocation.identifier)
     ) {
-      if (methodInvocation.parameterNodes?.length === 2) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
-        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
-      } else if (methodInvocation.parameterNodes?.length === 3) {
-        testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[2]);
-        testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
-        testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+      if (methodInvocation.parameterNodes?.length) {
+        if (methodInvocation.parameterNodes.length === 2) {
+          testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
+          testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+        } else if (methodInvocation.parameterNodes.length > 2) {
+          testAssert.literalActual = this.getLiteralValue.execute(methodInvocation.parameterNodes[2]);
+          testAssert.literalExpected = this.getLiteralValue.execute(methodInvocation.parameterNodes[1]);
+          testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
+        }
       }
     } else if (
       [
@@ -154,6 +186,14 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
         'assertNotNull',
         'assertNull',
         'assertTrue',
+        'Assert.assertFalse',
+        'Assert.assertNotNull',
+        'Assert.assertNull',
+        'Assert.assertTrue',
+        'Assertions.assertFalse',
+        'Assertions.assertNotNull',
+        'Assertions.assertNull',
+        'Assertions.assertTrue',
       ].includes(methodInvocation.identifier)
     ) {
       if (methodInvocation.parameterNodes?.length === 1) {
@@ -164,12 +204,16 @@ export class ExtractTestsFromJavaJUnitASTService implements ExtractTestsFromAST 
       }
     }
 
-    if (['fail'].includes(methodInvocation.identifier)) {
+    if ([
+      'fail',
+      'Assert.fail',
+      'Assertions.fail',
+    ].includes(methodInvocation.identifier)) {
       if (methodInvocation.parameterNodes?.length === 1) {
         testAssert.message = this.getLiteralValue.execute(methodInvocation.parameterNodes[0]);
       }
     }
- 
+
     return testAssert;
   }
 }
