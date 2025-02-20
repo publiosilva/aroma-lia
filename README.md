@@ -1,38 +1,31 @@
 # AromaLIA - Language-Independent Test Smell Analyzer
 
-AromaLIA is a tool designed to analyze test smells in a language-independent manner, providing insights into improving test quality.
+This project is a Node.js application that showcases examples of test smell detection in both Java and JavaScript.
 
-## 🚀 Getting Started
+## Setup
 
-### Prerequisites
-Ensure you have [Docker](https://www.docker.com/get-started) installed on your system.
+1. **Clone the repository:**
+   ```
+   git clone <repository_url>
+   ```
 
-### Build the Docker Image
-To build the AromaLIA Docker image, run the following command:
+2. **Install dependencies:**
+   ```
+   npm install
+   ```
 
-```sh
-docker build -t aromalia .
-```
+3. **Run Java Example:**
+   To run the Java example, execute the following command:
+   ```
+   npm run example:java
+   ```
 
-### Run the Container
-Execute the following command to start AromaLIA:
+4. **Run JavaScript Example:**
+   To run the JavaScript example, execute the following command:
+   ```
+   npm run example:javascript
+   ```
 
-```sh
-docker run --rm -it -p 3000:3000 -p 8000:8000 aromalia
-```
+## Notes
 
-### Access the Application
-Once the container is running, open your browser and navigate to:
-
-```
-http://localhost:8000
-```
-
-## 📖 License
-This project is licensed under [MIT License](LICENSE).
-
-## 🤝 Contributing
-We welcome contributions! Feel free to submit issues or pull requests.
-
-## 📬 Contact
-For questions or support, please reach out via [GitHub Issues](https://github.com/publiosilva/aromalia/issues).
+- Ensure you have Node.js installed on your system.
